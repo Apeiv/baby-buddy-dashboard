@@ -158,4 +158,15 @@ export const Icons = {
       <line x1="12" y1="7.8" x2="12" y2="16.2" transform="rotate(-45 12 12)" />
     </svg>
   ),
+  Clipboard: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="5" y="4" width="14" height="17" rx="2" />
+      <rect x="9" y="2.5" width="6" height="3.5" rx="1" />
+      <line x1="8.5" y1="11" x2="12" y2="11" />
+      <line x1="8.5" y1="15" x2="10.5" y2="15" />
+      <circle cx="15.5" cy="14.5" r="2.4" />
+      <line x1="15.5" y1="13.3" x2="15.5" y2="15.7" />
+      <line x1="14.3" y1="14.5" x2="16.7" y2="14.5" />
+    </svg>
+  ),
 };

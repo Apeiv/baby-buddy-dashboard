@@ -28,7 +28,7 @@ import "./styles.css";
 const TABS = [
   { id: "overview", label: "Overview", icon: <Icons.Activity /> },
   { id: "growth", label: "Growth", icon: <Icons.TrendUp /> },
-  { id: "notes", label: "Notes", icon: <Icons.StickyNote /> },
+  { id: "notes", label: "Notes & Meds", icon: <Icons.Clipboard /> },
 ];
 
 const ACTION_GROUPS = [
@@ -282,7 +282,6 @@ export default function App() {
             changes={data.changes}
             tummyTimes={data.tummyTimes}
             weeklyTummyTimes={data.weeklyTummyTimes}
-            medications={data.medications}
             onEditEntry={(type, entry) => setModal({ type, entry })}
           />
         )}
@@ -302,6 +301,7 @@ export default function App() {
         {activeTab === "notes" && (
           <NotesTab
             notes={data.notes}
+            medications={data.medications}
             onEditEntry={(type, entry) => setModal({ type, entry })}
           />
         )}

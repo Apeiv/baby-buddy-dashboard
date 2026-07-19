@@ -23,8 +23,6 @@ import {
   toFeedingTimeline,
   toDiaperTimeline,
   toSleepBlocks,
-  toMedicationTimeline,
-  getMedicationStatus,
   aggregateByDayOfWeek,
   aggregateSleepByDay,
   aggregateTummyByDay,
@@ -37,7 +35,7 @@ import { useFeedingChartMetrics } from "../hooks/useFeedingChartMetrics";
 
 const COLLAPSED_COUNT = 2;
 
-export default function OverviewTab({ childId, demoMode, feedings, weeklyFeedings: weeklyFeedingsRaw, sleepEntries, weeklySleep, changes, tummyTimes, weeklyTummyTimes, medications, onEditEntry }) {
+export default function OverviewTab({ childId, demoMode, feedings, weeklyFeedings: weeklyFeedingsRaw, sleepEntries, weeklySleep, changes, tummyTimes, weeklyTummyTimes, onEditEntry }) {
   const units = useUnits();
   const [expanded, setExpanded] = useState({});
   const [dayModal, setDayModal] = useState(null);
@@ -54,8 +52,6 @@ export default function OverviewTab({ childId, demoMode, feedings, weeklyFeeding
   const feedingTimeline = toFeedingTimeline(feedings, units.volume);
   const diaperTimeline = toDiaperTimeline(changes);
   const sleepBlocks = toSleepBlocks(sleepEntries);
-  const medicationTimeline = toMedicationTimeline(medications || []);
-  const medicationStatus = getMedicationStatus(medications || []);
   const weeklyFeedings = aggregateByDayOfWeek(weeklyFeedingsRaw, "amount");
   const sleepByDay = aggregateSleepByDay(weeklySleep);
   const tummyByDay = aggregateTummyByDay(weeklyTummyTimes);
@@ -111,7 +107,12 @@ export default function OverviewTab({ childId, demoMode, feedings, weeklyFeeding
             icon={<Icons.Bottle />}
             label="Feedings"
             value={totalFeeding > 0 ? `${Math.round(totalFeeding)} ${units.volume}` : `${feedings.length}`}
-            sub={`${feedings.length} feeding${feedings.length !== 1 ? "s" : ""} today`}
+            sub={
+              <>
+                <div>{feedings.length} today</div>
+                {feedingTimeline[0] && <div style={{ marginTop: 2 }}>Last: {feedingTimeline[0].detail}</div>}
+              </>
+            }
             color={colors.feeding}
             onClick={() => setShowReport(true)}
           />
@@ -413,63 +414,6 @@ export default function OverviewTab({ childId, demoMode, feedings, weeklyFeeding
               <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 20 }}>
                 No tummy time recorded today
               </div>
-            )}
-          </SectionCard>
-        </div>
-
-        {/* Medications */}
-        <div className="fade-in fade-in-6">
-          <SectionCard title="Medications" icon={<Icons.Pill />} color={colors.medication}>
-            {medicationStatus.length > 0 && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: medicationTimeline.length > 0 ? 14 : 0 }}>
-                {medicationStatus.map((s) => (
-                  <div
-                    key={s.name}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "8px 12px",
-                      borderRadius: 10,
-                      background: s.overdue ? "#EF444412" : `${colors.medication}10`,
-                      border: `1px solid ${s.overdue ? "#EF444430" : `${colors.medication}25`}`,
-                    }}
-                  >
-                    <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{s.name}</span>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: s.overdue ? "#EF4444" : colors.medication }}>
-                      {s.overdue
-                        ? `Overdue since ${s.dueAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
-                        : `Next dose ${s.dueAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-            {medicationTimeline.length > 0 ? (
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                {(expanded.medications ? medicationTimeline : medicationTimeline.slice(0, COLLAPSED_COUNT)).map((m, i, arr) => (
-                  <div key={i} className="entry-clickable" {...clickableProps(() => onEditEntry?.("medication", m.entry))}>
-                    <TimelineItem
-                      time={m.time}
-                      label={m.label}
-                      detail={m.detail}
-                      color={colors.medication}
-                      isLast={i === arr.length - 1}
-                    />
-                  </div>
-                ))}
-                {medicationTimeline.length > COLLAPSED_COUNT && (
-                  <button className="expand-toggle" onClick={() => toggle("medications")}>
-                    {expanded.medications ? "Show less" : `Show ${medicationTimeline.length - COLLAPSED_COUNT} more`}
-                  </button>
-                )}
-              </div>
-            ) : (
-              medicationStatus.length === 0 && (
-                <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 20 }}>
-                  No medications logged
-                </div>
-              )
             )}
           </SectionCard>
         </div>
