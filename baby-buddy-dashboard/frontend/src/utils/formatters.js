@@ -118,6 +118,35 @@ export function parseDurationHours(value) {
   return hours || null;
 }
 
+export function formatDurationString(totalHours) {
+  const totalMinutes = Math.max(0, Math.round(totalHours * 60));
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${pad(h)}:${pad(m)}:00`;
+}
+
+export function formatElapsedHM(ms) {
+  const totalMinutes = Math.max(0, Math.round(ms / 60000));
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  if (h === 0) return `${m}m`;
+  return m ? `${h}h ${m}m` : `${h}h`;
+}
+
+export function formatDueLabel(dueAt) {
+  const now = new Date();
+  if (now.getTime() > dueAt.getTime()) {
+    return `Overdue by ${formatElapsedHM(now.getTime() - dueAt.getTime())}`;
+  }
+  const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const dayDiff = Math.round((startOfDay(dueAt) - startOfDay(now)) / 86400000);
+  const time = dueAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  if (dayDiff === 0) return `Next: Today at ${time}`;
+  if (dayDiff === 1) return `Next: Tomorrow at ${time}`;
+  return `Next: ${dueAt.toLocaleDateString([], { month: "short", day: "numeric" })} at ${time}`;
+}
+
 export function getMedicationStatus(medications) {
   const latestByName = {};
   medications.forEach((m) => {
@@ -130,7 +159,7 @@ export function getMedicationStatus(medications) {
   return Object.values(latestByName).map((m) => {
     const hours = parseDurationHours(m.next_dose_interval);
     const dueAt = new Date(new Date(m.time).getTime() + hours * 3600000);
-    return { name: m.name, dueAt, overdue: Date.now() > dueAt.getTime() };
+    return { name: m.name, dueAt, overdue: Date.now() > dueAt.getTime(), entry: m };
   });
 }
 

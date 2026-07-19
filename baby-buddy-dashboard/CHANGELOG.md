@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.3.3
+
+- Added a "Mark as taken" quick-log button to each medication's status
+  badge (Notes & Meds tab) - one tap logs a new dose reusing the same
+  name/dosage/unit/interval as the last one, timestamped now, instead
+  of opening the full form.
+- The "next dose due" badge now shows how late a dose is ("Overdue by
+  3h 20m") and which day the next one is due ("Next: Tomorrow at
+  19:00") instead of just a bare time with no date context.
+- Added a way to manually set the next dose time (clock icon next to
+  the badge) - pick a date/time and it recalculates the underlying
+  interval on the last logged dose accordingly.
+- Added a 30-day Medication Log (date-range selectable, CSV export)
+  under the Medications card, so you can review or export what was
+  actually given over time.
+
 ## 1.3.2
 
 - Fixed the Feedings card on Overview showing the count twice (big

@@ -301,9 +301,11 @@ export default function App() {
         )}
         {activeTab === "notes" && (
           <NotesTab
+            childId={data.child?.id}
             notes={data.notes}
             medications={data.medications}
             onEditEntry={(type, entry) => setModal({ type, entry })}
+            onDataChanged={data.refetch}
           />
         )}
       </main>

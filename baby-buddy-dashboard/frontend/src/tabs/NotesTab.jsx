@@ -1,6 +1,8 @@
 import { useState } from "react";
 import SectionCard from "../components/SectionCard";
 import TimelineItem from "../components/TimelineItem";
+import MedicationStatusRow from "../components/MedicationStatusRow";
+import MedicationLogModal from "../components/MedicationLogModal";
 import { Icons } from "../components/Icons";
 import { colors } from "../utils/colors";
 import { toNoteTimeline, toMedicationTimeline, getMedicationStatus } from "../utils/formatters";
@@ -9,8 +11,9 @@ import { clickableProps } from "../utils/a11y";
 const COLLAPSED_COUNT = 5;
 const COLLAPSED_COUNT_MEDS = 2;
 
-export default function NotesTab({ notes, medications, onEditEntry }) {
+export default function NotesTab({ childId, notes, medications, onEditEntry, onDataChanged }) {
   const [expanded, setExpanded] = useState({});
+  const [showMedicationLog, setShowMedicationLog] = useState(false);
   const toggle = (key) => setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
 
   const noteTimeline = toNoteTimeline(notes || []);
@@ -24,25 +27,7 @@ export default function NotesTab({ notes, medications, onEditEntry }) {
           {medicationStatus.length > 0 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: medicationTimeline.length > 0 ? 14 : 0 }}>
               {medicationStatus.map((s) => (
-                <div
-                  key={s.name}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "8px 12px",
-                    borderRadius: 10,
-                    background: s.overdue ? "#EF444412" : `${colors.medication}10`,
-                    border: `1px solid ${s.overdue ? "#EF444430" : `${colors.medication}25`}`,
-                  }}
-                >
-                  <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{s.name}</span>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: s.overdue ? "#EF4444" : colors.medication }}>
-                    {s.overdue
-                      ? `Overdue since ${s.dueAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
-                      : `Next dose ${s.dueAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`}
-                  </span>
-                </div>
+                <MedicationStatusRow key={s.name} status={s} childId={childId} onUpdated={onDataChanged} />
               ))}
             </div>
           )}
@@ -72,6 +57,25 @@ export default function NotesTab({ notes, medications, onEditEntry }) {
               </div>
             )
           )}
+          <button
+            onClick={() => setShowMedicationLog(true)}
+            style={{
+              display: "block",
+              width: "100%",
+              marginTop: 12,
+              padding: "6px 0",
+              background: "none",
+              border: "none",
+              color: "var(--text-dim)",
+              fontSize: 12,
+              fontWeight: 500,
+              fontFamily: "inherit",
+              cursor: "pointer",
+              textAlign: "center",
+            }}
+          >
+            Log →
+          </button>
         </SectionCard>
       </div>
 
@@ -110,6 +114,9 @@ export default function NotesTab({ notes, medications, onEditEntry }) {
           )}
         </SectionCard>
       </div>
+      {showMedicationLog && (
+        <MedicationLogModal childId={childId} onClose={() => setShowMedicationLog(false)} />
+      )}
     </>
   );
 }
