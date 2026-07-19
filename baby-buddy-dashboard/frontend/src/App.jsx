@@ -18,6 +18,9 @@ import TummyTimeForm from "./components/forms/TummyTimeForm";
 import NoteForm from "./components/forms/NoteForm";
 import WeightForm from "./components/forms/WeightForm";
 import HeightForm from "./components/forms/HeightForm";
+import HeadCircumferenceForm from "./components/forms/HeadCircumferenceForm";
+import BmiForm from "./components/forms/BmiForm";
+import MedicationForm from "./components/forms/MedicationForm";
 import TimerButton from "./components/TimerButton";
 import ErrorLogModal from "./components/ErrorLogModal";
 import "./styles.css";
@@ -44,6 +47,14 @@ const ACTION_GROUPS = [
       { id: "temp", label: "Temp", icon: <Icons.Temp />, color: colors.temp },
       { id: "weight", label: "Weight", icon: <Icons.Weight />, color: colors.growth },
       { id: "height", label: "Height", icon: <Icons.Ruler />, color: colors.height },
+      { id: "headCircumference", label: "Head Circ.", icon: <Icons.HeadCircle />, color: colors.headCircumference },
+      { id: "bmi", label: "BMI", icon: <Icons.Gauge />, color: colors.bmi },
+    ],
+  },
+  {
+    label: "Medication",
+    actions: [
+      { id: "medication", label: "Medication", icon: <Icons.Pill />, color: colors.medication },
     ],
   },
   {
@@ -271,6 +282,7 @@ export default function App() {
             changes={data.changes}
             tummyTimes={data.tummyTimes}
             weeklyTummyTimes={data.weeklyTummyTimes}
+            medications={data.medications}
             onEditEntry={(type, entry) => setModal({ type, entry })}
           />
         )}
@@ -280,6 +292,8 @@ export default function App() {
             demoMode={data.demoMode}
             weights={data.weights}
             heights={data.heights}
+            headCircumferences={data.headCircumferences}
+            bmis={data.bmis}
             monthlyFeedings={data.monthlyFeedings}
             monthlySleep={data.monthlySleep}
             onEditEntry={(type, entry) => setModal({ type, entry })}
@@ -432,6 +446,30 @@ export default function App() {
       )}
       {modal?.type === "height" && (
         <HeightForm
+          childId={data.child?.id}
+          entry={modal.entry}
+          onDone={handleFormDone}
+          onClose={closeModal}
+        />
+      )}
+      {modal?.type === "headCircumference" && (
+        <HeadCircumferenceForm
+          childId={data.child?.id}
+          entry={modal.entry}
+          onDone={handleFormDone}
+          onClose={closeModal}
+        />
+      )}
+      {modal?.type === "bmi" && (
+        <BmiForm
+          childId={data.child?.id}
+          entry={modal.entry}
+          onDone={handleFormDone}
+          onClose={closeModal}
+        />
+      )}
+      {modal?.type === "medication" && (
+        <MedicationForm
           childId={data.child?.id}
           entry={modal.entry}
           onDone={handleFormDone}

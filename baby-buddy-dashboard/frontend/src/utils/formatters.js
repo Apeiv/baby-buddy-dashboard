@@ -98,6 +98,40 @@ export function toNoteTimeline(notes) {
   }));
 }
 
+export function toMedicationTimeline(medications) {
+  return medications.map((m) => ({
+    time: formatTime(m.time),
+    label: m.name,
+    detail: `${m.dosage ? `${m.dosage}${m.dosage_unit ? " " + m.dosage_unit : ""} · ` : ""}${timeAgo(m.time)}`,
+    entry: m,
+  }));
+}
+
+export function parseDurationHours(value) {
+  if (!value) return null;
+  const parts = String(value).trim().split(" ");
+  const days = parts.length > 1 ? parseFloat(parts[0]) || 0 : 0;
+  const hms = (parts.length > 1 ? parts[1] : parts[0]).split(":").map(Number);
+  const hours = days * 24 + (hms[0] || 0) + (hms[1] || 0) / 60 + (hms[2] || 0) / 3600;
+  return hours || null;
+}
+
+export function getMedicationStatus(medications) {
+  const latestByName = {};
+  medications.forEach((m) => {
+    if (!m.next_dose_interval) return;
+    const existing = latestByName[m.name];
+    if (!existing || new Date(m.time) > new Date(existing.time)) {
+      latestByName[m.name] = m;
+    }
+  });
+  return Object.values(latestByName).map((m) => {
+    const hours = parseDurationHours(m.next_dose_interval);
+    const dueAt = new Date(new Date(m.time).getTime() + hours * 3600000);
+    return { name: m.name, dueAt, overdue: Date.now() > dueAt.getTime() };
+  });
+}
+
 export function toGrowthSeries(entries, valueKey) {
   return entries
     .slice()

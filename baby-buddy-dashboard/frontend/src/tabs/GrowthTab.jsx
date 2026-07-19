@@ -15,24 +15,36 @@ import CustomTooltip from "../components/CustomTooltip";
 import ChartDetailBar from "../components/ChartDetailBar";
 import DayActivitiesModal from "../components/DayActivitiesModal";
 import ReportModal from "../components/ReportModal";
+import ChartSettingsMenu from "../components/ChartSettingsMenu";
 import { Icons } from "../components/Icons";
 import { colors } from "../utils/colors";
 import { useUnits } from "../utils/units";
 import { toGrowthSeries, formatGrowthTick, dailyFeedingTotals, dailySleepTotals, getEntriesForDate } from "../utils/formatters";
 import { clickableProps } from "../utils/a11y";
+import { useFeedingChartMetrics } from "../hooks/useFeedingChartMetrics";
 
-export default function GrowthTab({ childId, demoMode, weights, heights, monthlyFeedings, monthlySleep, onEditEntry }) {
+export default function GrowthTab({ childId, demoMode, weights, heights, headCircumferences, bmis, monthlyFeedings, monthlySleep, onEditEntry }) {
   const units = useUnits();
   const [dayModal, setDayModal] = useState(null);
   const [selectedBar, setSelectedBar] = useState(null);
   const [showReport, setShowReport] = useState(false);
+  const [feedingMetrics, updateFeedingMetrics] = useFeedingChartMetrics();
   const weightSeries = toGrowthSeries(weights, "weight");
   const heightSeries = toGrowthSeries(heights, "height");
+  const headCircumferenceSeries = toGrowthSeries(headCircumferences, "head_circumference");
+  const bmiSeries = toGrowthSeries(bmis, "bmi");
   const feedingSeries = dailyFeedingTotals(monthlyFeedings);
   const sleepSeries = dailySleepTotals(monthlySleep);
 
+  const FEEDING_METRIC_OPTIONS = [
+    { key: "amount", label: `Amount (${units.volume})` },
+    { key: "count", label: "Feedings" },
+  ];
+
   const latestWeight = weights[0];
   const latestHeight = heights[0];
+  const latestHeadCircumference = headCircumferences[0];
+  const latestBmi = bmis[0];
 
   // Compute averages for stat cards
   const feedingDays = feedingSeries.filter((d) => d.amount > 0);
@@ -50,8 +62,14 @@ export default function GrowthTab({ childId, demoMode, weights, heights, monthly
 
   const handleChartClick = (data, type) => {
     if (!data || !data.activePayload?.[0]) return;
-    const payload = data.activePayload[0];
     const label = data.activeLabel;
+    if (type === "feeding") {
+      const amount = data.activePayload?.find((p) => p.dataKey === "amount")?.value;
+      const count = data.activePayload?.find((p) => p.dataKey === "count")?.value;
+      setSelectedBar({ type, label, value: amount, value2: count });
+      return;
+    }
+    const payload = data.activePayload[0];
     const value = payload.value;
     const entry = payload.payload?.entry;
     setSelectedBar({ type, label, value, entry });
@@ -174,6 +192,90 @@ export default function GrowthTab({ childId, demoMode, weights, heights, monthly
                   width: 30,
                   height: 30,
                   borderRadius: 8,
+                  background: `${colors.headCircumference}18`,
+                  color: colors.headCircumference,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Icons.HeadCircle />
+              </div>
+              <span style={{ fontSize: 12, color: "var(--text-dim)", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                Head Circ.
+              </span>
+            </div>
+            <div style={{ fontSize: 28, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em" }}>
+              {latestHeadCircumference ? `${latestHeadCircumference.head_circumference} ${units.length}` : "—"}
+            </div>
+            {latestHeadCircumference && (
+              <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
+                {new Date(latestHeadCircumference.date).toLocaleDateString()}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="fade-in fade-in-3">
+          <div
+            className="entry-clickable"
+            {...clickableProps(() => setShowReport(true))}
+            style={{
+              background: "var(--card-bg)",
+              borderRadius: 16,
+              padding: "20px 22px",
+              border: "1px solid var(--border)",
+              cursor: "pointer",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+              <div
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: 8,
+                  background: `${colors.bmi}18`,
+                  color: colors.bmi,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Icons.Gauge />
+              </div>
+              <span style={{ fontSize: 12, color: "var(--text-dim)", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                BMI
+              </span>
+            </div>
+            <div style={{ fontSize: 28, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em" }}>
+              {latestBmi ? latestBmi.bmi : "—"}
+            </div>
+            {latestBmi && (
+              <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
+                {new Date(latestBmi.date).toLocaleDateString()}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="fade-in fade-in-3">
+          <div
+            className="entry-clickable"
+            {...clickableProps(() => setShowReport(true))}
+            style={{
+              background: "var(--card-bg)",
+              borderRadius: 16,
+              padding: "20px 22px",
+              border: "1px solid var(--border)",
+              cursor: "pointer",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+              <div
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: 8,
                   background: `${colors.feeding}18`,
                   color: colors.feeding,
                   display: "flex",
@@ -241,26 +343,56 @@ export default function GrowthTab({ childId, demoMode, weights, heights, monthly
       <div className="card-grid">
         {/* Daily Feeding Totals */}
         <div className="fade-in fade-in-5">
-          <SectionCard title="Daily Feeding (30d)" icon={<Icons.Bottle />} color={colors.feeding}>
-            {feedingSeries.some((d) => d.amount > 0) ? (
+          <SectionCard
+            title="Daily Feeding (30d)"
+            icon={<Icons.Bottle />}
+            color={colors.feeding}
+            actions={
+              <ChartSettingsMenu
+                options={FEEDING_METRIC_OPTIONS}
+                value={feedingMetrics}
+                onChange={updateFeedingMetrics}
+                color={colors.feeding}
+              />
+            }
+          >
+            {feedingSeries.some((d) => d.amount > 0 || d.count > 0) ? (
               <>
                 <div style={{ height: 200 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={feedingSeries} onClick={(data) => handleChartClick(data, "feeding")}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#252836" vertical={false} />
                       <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#5A6178" }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                      <YAxis tick={{ fontSize: 11, fill: "#5A6178" }} axisLine={false} tickLine={false} />
+                      <YAxis yAxisId="left" tick={{ fontSize: 11, fill: "#5A6178" }} axisLine={false} tickLine={false} />
+                      <YAxis yAxisId="right" orientation="right" hide />
                       <Tooltip content={<CustomTooltip />} />
-                      <Area
-                        type="monotone"
-                        dataKey="amount"
-                        stroke={colors.feeding}
-                        strokeWidth={2}
-                        fill={`${colors.feeding}30`}
-                        dot={false}
-                        activeDot={{ r: 4, fill: colors.feeding, cursor: "pointer" }}
-                        cursor="pointer"
-                      />
+                      {feedingMetrics.amount && (
+                        <Area
+                          yAxisId="left"
+                          type="monotone"
+                          dataKey="amount"
+                          stroke={colors.feeding}
+                          strokeWidth={2}
+                          fill={`${colors.feeding}30`}
+                          dot={false}
+                          activeDot={{ r: 4, fill: colors.feeding, cursor: "pointer" }}
+                          cursor="pointer"
+                        />
+                      )}
+                      {feedingMetrics.count && (
+                        <Area
+                          yAxisId="right"
+                          type="monotone"
+                          dataKey="count"
+                          stroke={`${colors.feeding}99`}
+                          strokeWidth={2}
+                          strokeDasharray="4 3"
+                          fill="transparent"
+                          dot={false}
+                          activeDot={{ r: 4, fill: colors.feeding, cursor: "pointer" }}
+                          cursor="pointer"
+                        />
+                      )}
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -269,6 +401,8 @@ export default function GrowthTab({ childId, demoMode, weights, heights, monthly
                     label={selectedBar.label}
                     value={selectedBar.value}
                     unit={units.volume}
+                    value2={selectedBar.value2}
+                    unit2="feedings"
                     color={colors.feeding}
                     onViewEntries={() => openDayModal(selectedBar.label, "feeding")}
                     onDismiss={() => setSelectedBar(null)}
@@ -433,6 +567,98 @@ export default function GrowthTab({ childId, demoMode, weights, heights, monthly
             ) : (
               <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 40 }}>
                 {heightSeries.length === 1 ? "Need at least 2 measurements to show trend" : "No height data recorded yet"}
+              </div>
+            )}
+          </SectionCard>
+        </div>
+
+        {/* Head Circumference Chart */}
+        <div className="fade-in fade-in-8">
+          <SectionCard title="Head Circumference Trend" icon={<Icons.HeadCircle />} color={colors.headCircumference}>
+            {headCircumferenceSeries.length >= 2 ? (
+              <>
+                <div style={{ height: 200 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={headCircumferenceSeries} onClick={(data) => handleChartClick(data, "headCircumference")}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#252836" vertical={false} />
+                      <XAxis dataKey="timestamp" type="number" scale="time" domain={["dataMin", "dataMax"]} tickFormatter={formatGrowthTick} tick={{ fontSize: 11, fill: "#5A6178" }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 11, fill: "#5A6178" }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
+                      <Tooltip content={<CustomTooltip labelFormatter={formatGrowthTick} />} />
+                      <Line
+                        type="monotone"
+                        dataKey="head_circumference"
+                        stroke={colors.headCircumference}
+                        strokeWidth={2.5}
+                        dot={{ fill: colors.headCircumference, r: 4, cursor: "pointer" }}
+                        activeDot={{ r: 6, cursor: "pointer" }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+                {selectedBar?.type === "headCircumference" && (
+                  <ChartDetailBar
+                    label={formatGrowthTick(selectedBar.label)}
+                    value={selectedBar.value}
+                    unit={units.length}
+                    color={colors.headCircumference}
+                    actionLabel="Edit"
+                    onViewEntries={() => {
+                      if (selectedBar.entry) onEditEntry?.("headCircumference", selectedBar.entry);
+                      setSelectedBar(null);
+                    }}
+                    onDismiss={() => setSelectedBar(null)}
+                  />
+                )}
+              </>
+            ) : (
+              <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 40 }}>
+                {headCircumferenceSeries.length === 1 ? "Need at least 2 measurements to show trend" : "No head circumference data recorded yet"}
+              </div>
+            )}
+          </SectionCard>
+        </div>
+
+        {/* BMI Chart */}
+        <div className="fade-in fade-in-8">
+          <SectionCard title="BMI Trend" icon={<Icons.Gauge />} color={colors.bmi}>
+            {bmiSeries.length >= 2 ? (
+              <>
+                <div style={{ height: 200 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={bmiSeries} onClick={(data) => handleChartClick(data, "bmi")}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#252836" vertical={false} />
+                      <XAxis dataKey="timestamp" type="number" scale="time" domain={["dataMin", "dataMax"]} tickFormatter={formatGrowthTick} tick={{ fontSize: 11, fill: "#5A6178" }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 11, fill: "#5A6178" }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
+                      <Tooltip content={<CustomTooltip labelFormatter={formatGrowthTick} />} />
+                      <Line
+                        type="monotone"
+                        dataKey="bmi"
+                        stroke={colors.bmi}
+                        strokeWidth={2.5}
+                        dot={{ fill: colors.bmi, r: 4, cursor: "pointer" }}
+                        activeDot={{ r: 6, cursor: "pointer" }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+                {selectedBar?.type === "bmi" && (
+                  <ChartDetailBar
+                    label={formatGrowthTick(selectedBar.label)}
+                    value={selectedBar.value}
+                    unit=""
+                    color={colors.bmi}
+                    actionLabel="Edit"
+                    onViewEntries={() => {
+                      if (selectedBar.entry) onEditEntry?.("bmi", selectedBar.entry);
+                      setSelectedBar(null);
+                    }}
+                    onDismiss={() => setSelectedBar(null)}
+                  />
+                )}
+              </>
+            ) : (
+              <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 40 }}>
+                {bmiSeries.length === 1 ? "Need at least 2 measurements to show trend" : "No BMI data recorded yet"}
               </div>
             )}
           </SectionCard>

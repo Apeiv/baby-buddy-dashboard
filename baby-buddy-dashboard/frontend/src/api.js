@@ -67,6 +67,13 @@ export const api = {
   updateTemperature: (id, data) =>
     request(`temperature/${id}/`, { method: "PATCH", body: JSON.stringify(data) }),
 
+  // Medication
+  getMedication: (params) => request(`medication/${qs(params)}`),
+  createMedication: (data) =>
+    request("medication/", { method: "POST", body: JSON.stringify(data) }),
+  updateMedication: (id, data) =>
+    request(`medication/${id}/`, { method: "PATCH", body: JSON.stringify(data) }),
+
   // Weight
   getWeight: (params) => request(`weight/${qs(params)}`),
   createWeight: (data) =>
@@ -80,6 +87,20 @@ export const api = {
     request("height/", { method: "POST", body: JSON.stringify(data) }),
   updateHeight: (id, data) =>
     request(`height/${id}/`, { method: "PATCH", body: JSON.stringify(data) }),
+
+  // Head circumference
+  getHeadCircumference: (params) => request(`head-circumference/${qs(params)}`),
+  createHeadCircumference: (data) =>
+    request("head-circumference/", { method: "POST", body: JSON.stringify(data) }),
+  updateHeadCircumference: (id, data) =>
+    request(`head-circumference/${id}/`, { method: "PATCH", body: JSON.stringify(data) }),
+
+  // BMI
+  getBmi: (params) => request(`bmi/${qs(params)}`),
+  createBmi: (data) =>
+    request("bmi/", { method: "POST", body: JSON.stringify(data) }),
+  updateBmi: (id, data) =>
+    request(`bmi/${id}/`, { method: "PATCH", body: JSON.stringify(data) }),
 
   // Pumping
   getPumping: (params) => request(`pumping/${qs(params)}`),

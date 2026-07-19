@@ -23,6 +23,8 @@ import {
   toFeedingTimeline,
   toDiaperTimeline,
   toSleepBlocks,
+  toMedicationTimeline,
+  getMedicationStatus,
   aggregateByDayOfWeek,
   aggregateSleepByDay,
   aggregateTummyByDay,
@@ -31,34 +33,19 @@ import {
 } from "../utils/formatters";
 import { useUnits } from "../utils/units";
 import { clickableProps } from "../utils/a11y";
+import { useFeedingChartMetrics } from "../hooks/useFeedingChartMetrics";
 
 const COLLAPSED_COUNT = 2;
 
-export default function OverviewTab({ childId, demoMode, feedings, weeklyFeedings: weeklyFeedingsRaw, sleepEntries, weeklySleep, changes, tummyTimes, weeklyTummyTimes, onEditEntry }) {
+export default function OverviewTab({ childId, demoMode, feedings, weeklyFeedings: weeklyFeedingsRaw, sleepEntries, weeklySleep, changes, tummyTimes, weeklyTummyTimes, medications, onEditEntry }) {
   const units = useUnits();
   const [expanded, setExpanded] = useState({});
   const [dayModal, setDayModal] = useState(null);
   const [selectedBar, setSelectedBar] = useState(null);
   const [showReport, setShowReport] = useState(false);
-  const [feedingMetrics, setFeedingMetrics] = useState(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem("bbd_feeding_chart_metrics"));
-      if (saved && typeof saved === "object") return { amount: true, count: true, ...saved };
-    } catch {
-      // ignore invalid stored value
-    }
-    return { amount: true, count: true };
-  });
+  const [feedingMetrics, updateFeedingMetrics] = useFeedingChartMetrics();
   const toggle = (key) => setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
 
-  const updateFeedingMetrics = (next) => {
-    setFeedingMetrics(next);
-    try {
-      localStorage.setItem("bbd_feeding_chart_metrics", JSON.stringify(next));
-    } catch {
-      // storage unavailable - preference just won't persist
-    }
-  };
   const FEEDING_METRIC_OPTIONS = [
     { key: "amount", label: `Amount (${units.volume})` },
     { key: "count", label: "Feedings" },
@@ -67,6 +54,8 @@ export default function OverviewTab({ childId, demoMode, feedings, weeklyFeeding
   const feedingTimeline = toFeedingTimeline(feedings, units.volume);
   const diaperTimeline = toDiaperTimeline(changes);
   const sleepBlocks = toSleepBlocks(sleepEntries);
+  const medicationTimeline = toMedicationTimeline(medications || []);
+  const medicationStatus = getMedicationStatus(medications || []);
   const weeklyFeedings = aggregateByDayOfWeek(weeklyFeedingsRaw, "amount");
   const sleepByDay = aggregateSleepByDay(weeklySleep);
   const tummyByDay = aggregateTummyByDay(weeklyTummyTimes);
@@ -424,6 +413,63 @@ export default function OverviewTab({ childId, demoMode, feedings, weeklyFeeding
               <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 20 }}>
                 No tummy time recorded today
               </div>
+            )}
+          </SectionCard>
+        </div>
+
+        {/* Medications */}
+        <div className="fade-in fade-in-6">
+          <SectionCard title="Medications" icon={<Icons.Pill />} color={colors.medication}>
+            {medicationStatus.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: medicationTimeline.length > 0 ? 14 : 0 }}>
+                {medicationStatus.map((s) => (
+                  <div
+                    key={s.name}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "8px 12px",
+                      borderRadius: 10,
+                      background: s.overdue ? "#EF444412" : `${colors.medication}10`,
+                      border: `1px solid ${s.overdue ? "#EF444430" : `${colors.medication}25`}`,
+                    }}
+                  >
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{s.name}</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: s.overdue ? "#EF4444" : colors.medication }}>
+                      {s.overdue
+                        ? `Overdue since ${s.dueAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+                        : `Next dose ${s.dueAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {medicationTimeline.length > 0 ? (
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                {(expanded.medications ? medicationTimeline : medicationTimeline.slice(0, COLLAPSED_COUNT)).map((m, i, arr) => (
+                  <div key={i} className="entry-clickable" {...clickableProps(() => onEditEntry?.("medication", m.entry))}>
+                    <TimelineItem
+                      time={m.time}
+                      label={m.label}
+                      detail={m.detail}
+                      color={colors.medication}
+                      isLast={i === arr.length - 1}
+                    />
+                  </div>
+                ))}
+                {medicationTimeline.length > COLLAPSED_COUNT && (
+                  <button className="expand-toggle" onClick={() => toggle("medications")}>
+                    {expanded.medications ? "Show less" : `Show ${medicationTimeline.length - COLLAPSED_COUNT} more`}
+                  </button>
+                )}
+              </div>
+            ) : (
+              medicationStatus.length === 0 && (
+                <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 20 }}>
+                  No medications logged
+                </div>
+              )
             )}
           </SectionCard>
         </div>

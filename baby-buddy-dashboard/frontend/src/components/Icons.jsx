@@ -139,4 +139,23 @@ export const Icons = {
       <polyline points="6 9 12 15 18 9" />
     </svg>
   ),
+  HeadCircle: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="8" strokeDasharray="3 3" />
+      <path d="M12 4v2M20 12h-2M12 20v-2M4 12h2" />
+    </svg>
+  ),
+  Gauge: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 15a8 8 0 1 1 16 0" />
+      <path d="M12 15l4-5" />
+      <circle cx="12" cy="15" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  ),
+  Pill: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="9" width="18" height="6" rx="3" transform="rotate(-45 12 12)" />
+      <line x1="12" y1="7.8" x2="12" y2="16.2" transform="rotate(-45 12 12)" />
+    </svg>
+  ),
 };
