@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { api } from "../../api";
 import Modal, { FormField, FormInput, FormButton, FormError } from "../Modal";
+import DeleteButton from "../DeleteButton";
 import { colors } from "../../utils/colors";
 import { useUnits } from "../../utils/units";
 import { logError } from "../../utils/errorLog";
@@ -43,6 +44,17 @@ export default function HeightForm({ childId, entry, onDone, onClose }) {
     }
   };
 
+  const handleDelete = async () => {
+    setError(null);
+    try {
+      await api.deleteHeight(entry.id);
+      onDone();
+    } catch (err) {
+      setError("Delete failed - check your connection and try again.");
+      logError("Delete Height", err.message);
+    }
+  };
+
   return (
     <Modal title={isEdit ? "Edit Height" : "Log Height"} onClose={onClose}>
       <form onSubmit={handleSubmit}>
@@ -68,6 +80,7 @@ export default function HeightForm({ childId, entry, onDone, onClose }) {
           />
         </FormField>
         <FormError message={error} />
+        {isEdit && <DeleteButton onDelete={handleDelete} disabled={saving} />}
         <FormButton color={colors.height} disabled={saving || !height}>
           {saving ? "Saving..." : isEdit ? "Update Height" : "Save Height"}
         </FormButton>

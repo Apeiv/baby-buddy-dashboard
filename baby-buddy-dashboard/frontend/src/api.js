@@ -38,6 +38,7 @@ export const api = {
     request("feedings/", { method: "POST", body: JSON.stringify(data) }),
   updateFeeding: (id, data) =>
     request(`feedings/${id}/`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteFeeding: (id) => request(`feedings/${id}/`, { method: "DELETE" }),
 
   // Sleep
   getSleep: (params) => request(`sleep/${qs(params)}`),
@@ -45,6 +46,7 @@ export const api = {
     request("sleep/", { method: "POST", body: JSON.stringify(data) }),
   updateSleep: (id, data) =>
     request(`sleep/${id}/`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteSleep: (id) => request(`sleep/${id}/`, { method: "DELETE" }),
 
   // Diapers (changes)
   getChanges: (params) => request(`changes/${qs(params)}`),
@@ -52,6 +54,7 @@ export const api = {
     request("changes/", { method: "POST", body: JSON.stringify(data) }),
   updateChange: (id, data) =>
     request(`changes/${id}/`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteChange: (id) => request(`changes/${id}/`, { method: "DELETE" }),
 
   // Tummy time
   getTummyTimes: (params) => request(`tummy-times/${qs(params)}`),
@@ -59,6 +62,7 @@ export const api = {
     request("tummy-times/", { method: "POST", body: JSON.stringify(data) }),
   updateTummyTime: (id, data) =>
     request(`tummy-times/${id}/`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteTummyTime: (id) => request(`tummy-times/${id}/`, { method: "DELETE" }),
 
   // Temperature
   getTemperature: (params) => request(`temperature/${qs(params)}`),
@@ -73,6 +77,7 @@ export const api = {
     request("medication/", { method: "POST", body: JSON.stringify(data) }),
   updateMedication: (id, data) =>
     request(`medication/${id}/`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteMedication: (id) => request(`medication/${id}/`, { method: "DELETE" }),
 
   // Weight
   getWeight: (params) => request(`weight/${qs(params)}`),
@@ -80,6 +85,7 @@ export const api = {
     request("weight/", { method: "POST", body: JSON.stringify(data) }),
   updateWeight: (id, data) =>
     request(`weight/${id}/`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteWeight: (id) => request(`weight/${id}/`, { method: "DELETE" }),
 
   // Height
   getHeight: (params) => request(`height/${qs(params)}`),
@@ -87,6 +93,7 @@ export const api = {
     request("height/", { method: "POST", body: JSON.stringify(data) }),
   updateHeight: (id, data) =>
     request(`height/${id}/`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteHeight: (id) => request(`height/${id}/`, { method: "DELETE" }),
 
   // Head circumference
   getHeadCircumference: (params) => request(`head-circumference/${qs(params)}`),
@@ -94,6 +101,7 @@ export const api = {
     request("head-circumference/", { method: "POST", body: JSON.stringify(data) }),
   updateHeadCircumference: (id, data) =>
     request(`head-circumference/${id}/`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteHeadCircumference: (id) => request(`head-circumference/${id}/`, { method: "DELETE" }),
 
   // BMI
   getBmi: (params) => request(`bmi/${qs(params)}`),
@@ -101,6 +109,7 @@ export const api = {
     request("bmi/", { method: "POST", body: JSON.stringify(data) }),
   updateBmi: (id, data) =>
     request(`bmi/${id}/`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteBmi: (id) => request(`bmi/${id}/`, { method: "DELETE" }),
 
   // Pumping
   getPumping: (params) => request(`pumping/${qs(params)}`),
@@ -113,6 +122,7 @@ export const api = {
     request("notes/", { method: "POST", body: JSON.stringify(data) }),
   updateNote: (id, data) =>
     request(`notes/${id}/`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteNote: (id) => request(`notes/${id}/`, { method: "DELETE" }),
 
   // Timers
   getTimers: () => request("timers/"),

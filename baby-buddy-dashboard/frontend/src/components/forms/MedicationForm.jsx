@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { api } from "../../api";
 import Modal, { FormField, FormSelect, FormInput, FormButton, FormError } from "../Modal";
+import DeleteButton from "../DeleteButton";
 import { colors } from "../../utils/colors";
 import { logError } from "../../utils/errorLog";
 
@@ -62,6 +63,17 @@ export default function MedicationForm({ childId, entry, onDone, onClose }) {
     }
   };
 
+  const handleDelete = async () => {
+    setError(null);
+    try {
+      await api.deleteMedication(entry.id);
+      onDone();
+    } catch (err) {
+      setError("Delete failed - check your connection and try again.");
+      logError("Delete Medication", err.message);
+    }
+  };
+
   return (
     <Modal title={isEdit ? "Edit Medication" : "Log Medication"} onClose={onClose}>
       <form onSubmit={handleSubmit}>
@@ -115,6 +127,7 @@ export default function MedicationForm({ childId, entry, onDone, onClose }) {
           />
         </FormField>
         <FormError message={error} />
+        {isEdit && <DeleteButton onDelete={handleDelete} disabled={saving} />}
         <FormButton color={colors.medication} disabled={saving || !name.trim()}>
           {saving ? "Saving..." : isEdit ? "Update Medication" : "Save Medication"}
         </FormButton>

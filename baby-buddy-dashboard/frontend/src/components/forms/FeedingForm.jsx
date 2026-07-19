@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { api } from "../../api";
 import Modal, { FormField, FormSelect, FormInput, FormButton, FormError } from "../Modal";
+import DeleteButton from "../DeleteButton";
 import { colors } from "../../utils/colors";
 import { useUnits } from "../../utils/units";
 import { logError } from "../../utils/errorLog";
@@ -70,6 +71,17 @@ export default function FeedingForm({ childId, timerId, entry, onDone, onClose }
     }
   };
 
+  const handleDelete = async () => {
+    setError(null);
+    try {
+      await api.deleteFeeding(entry.id);
+      onDone();
+    } catch (err) {
+      setError("Delete failed - check your connection and try again.");
+      logError("Delete Feeding", err.message);
+    }
+  };
+
   return (
     <Modal title={isEdit ? "Edit Feeding" : "Log Feeding"} onClose={onClose}>
       <form onSubmit={handleSubmit}>
@@ -111,6 +123,7 @@ export default function FeedingForm({ childId, timerId, entry, onDone, onClose }
           />
         </FormField>
         <FormError message={error} />
+        {isEdit && <DeleteButton onDelete={handleDelete} disabled={saving} />}
         <FormButton color={colors.feeding} disabled={saving}>
           {saving ? "Saving..." : isEdit ? "Update Feeding" : "Save Feeding"}
         </FormButton>

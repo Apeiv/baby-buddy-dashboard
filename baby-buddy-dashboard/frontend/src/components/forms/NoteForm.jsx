@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { api } from "../../api";
 import Modal, { FormField, FormInput, FormButton, FormError } from "../Modal";
+import DeleteButton from "../DeleteButton";
 import { colors } from "../../utils/colors";
 import { logError } from "../../utils/errorLog";
 
@@ -37,6 +38,17 @@ export default function NoteForm({ childId, entry, onDone, onClose }) {
     }
   };
 
+  const handleDelete = async () => {
+    setError(null);
+    try {
+      await api.deleteNote(entry.id);
+      onDone();
+    } catch (err) {
+      setError("Delete failed - check your connection and try again.");
+      logError("Delete Note", err.message);
+    }
+  };
+
   return (
     <Modal title={isEdit ? "Edit Note" : "Add Note"} onClose={onClose}>
       <form onSubmit={handleSubmit}>
@@ -69,6 +81,7 @@ export default function NoteForm({ childId, entry, onDone, onClose }) {
           />
         </FormField>
         <FormError message={error} />
+        {isEdit && <DeleteButton onDelete={handleDelete} disabled={saving} />}
         <FormButton color={colors.note} disabled={saving || !note.trim()}>
           {saving ? "Saving..." : isEdit ? "Update Note" : "Save Note"}
         </FormButton>

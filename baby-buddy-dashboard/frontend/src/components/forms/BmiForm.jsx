@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { api } from "../../api";
 import Modal, { FormField, FormInput, FormButton, FormError } from "../Modal";
+import DeleteButton from "../DeleteButton";
 import { colors } from "../../utils/colors";
 import { logError } from "../../utils/errorLog";
 
@@ -41,6 +42,17 @@ export default function BmiForm({ childId, entry, onDone, onClose }) {
     }
   };
 
+  const handleDelete = async () => {
+    setError(null);
+    try {
+      await api.deleteBmi(entry.id);
+      onDone();
+    } catch (err) {
+      setError("Delete failed - check your connection and try again.");
+      logError("Delete BMI", err.message);
+    }
+  };
+
   return (
     <Modal title={isEdit ? "Edit BMI" : "Log BMI"} onClose={onClose}>
       <form onSubmit={handleSubmit}>
@@ -66,6 +78,7 @@ export default function BmiForm({ childId, entry, onDone, onClose }) {
           />
         </FormField>
         <FormError message={error} />
+        {isEdit && <DeleteButton onDelete={handleDelete} disabled={saving} />}
         <FormButton color={colors.bmi} disabled={saving || !bmi}>
           {saving ? "Saving..." : isEdit ? "Update BMI" : "Save BMI"}
         </FormButton>

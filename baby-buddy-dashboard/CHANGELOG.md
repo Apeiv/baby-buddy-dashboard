@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.3.4
+
+- Added the ability to delete an entry when editing it - every "Edit"
+  form (Feeding, Sleep, Diaper, Tummy Time, Weight, Height, Head
+  Circumference, BMI, Medication, Note) now has a "Delete" link above
+  the update button, with an inline "Delete this entry? / Cancel"
+  confirmation step before anything is actually removed. Previously
+  there was no way to undo a mis-logged entry short of editing it
+  into something else.
+
 ## 1.3.3
 
 - Added a "Mark as taken" quick-log button to each medication's status
