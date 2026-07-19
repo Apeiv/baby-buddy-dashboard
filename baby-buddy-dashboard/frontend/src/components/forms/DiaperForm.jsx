@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { api } from "../../api";
-import Modal, { FormField, FormSelect, FormInput, FormButton } from "../Modal";
+import Modal, { FormField, FormSelect, FormInput, FormButton, FormError } from "../Modal";
 import { colors } from "../../utils/colors";
+import { logError } from "../../utils/errorLog";
 
 function toLocalDatetime(date) {
   const pad = (n) => String(n).padStart(2, "0");
@@ -24,10 +25,12 @@ export default function DiaperForm({ childId, entry, onDone, onClose, preset }) 
   const [color, setColor] = useState(entry?.color || "");
   const [notes, setNotes] = useState(entry?.notes || "");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
+    setError(null);
     try {
       const data = { wet, solid, time: `${time}:00` };
       if (color) data.color = color;
@@ -39,8 +42,10 @@ export default function DiaperForm({ childId, entry, onDone, onClose, preset }) 
         await api.createChange(data);
       }
       onDone();
-    } catch {
+    } catch (err) {
       setSaving(false);
+      setError("Save failed - check your connection and try again.");
+      logError(isEdit ? "Update Diaper Change" : "Save Diaper Change", err.message);
     }
   };
 
@@ -94,6 +99,7 @@ export default function DiaperForm({ childId, entry, onDone, onClose, preset }) 
             placeholder="Optional"
           />
         </FormField>
+        <FormError message={error} />
         <FormButton color={colors.diaper} disabled={saving || (!wet && !solid)}>
           {saving ? "Saving..." : isEdit ? "Update Change" : "Save Change"}
         </FormButton>

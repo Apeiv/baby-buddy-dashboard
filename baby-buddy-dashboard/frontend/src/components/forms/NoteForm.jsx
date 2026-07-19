@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { api } from "../../api";
-import Modal, { FormField, FormInput, FormButton } from "../Modal";
+import Modal, { FormField, FormInput, FormButton, FormError } from "../Modal";
 import { colors } from "../../utils/colors";
+import { logError } from "../../utils/errorLog";
 
 function toLocalDatetime(date) {
   const pad = (n) => String(n).padStart(2, "0");
@@ -13,11 +14,13 @@ export default function NoteForm({ childId, entry, onDone, onClose }) {
   const [time, setTime] = useState(entry?.time ? toLocalDatetime(new Date(entry.time)) : toLocalDatetime(new Date()));
   const [note, setNote] = useState(entry?.note || "");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!note.trim()) return;
     setSaving(true);
+    setError(null);
     try {
       const data = { note: note.trim(), time: `${time}:00` };
       if (isEdit) {
@@ -27,8 +30,10 @@ export default function NoteForm({ childId, entry, onDone, onClose }) {
         await api.createNote(data);
       }
       onDone();
-    } catch {
+    } catch (err) {
       setSaving(false);
+      setError("Save failed - check your connection and try again.");
+      logError(isEdit ? "Update Note" : "Save Note", err.message);
     }
   };
 
@@ -63,6 +68,7 @@ export default function NoteForm({ childId, entry, onDone, onClose }) {
             }}
           />
         </FormField>
+        <FormError message={error} />
         <FormButton color={colors.note} disabled={saving || !note.trim()}>
           {saving ? "Saving..." : isEdit ? "Update Note" : "Save Note"}
         </FormButton>

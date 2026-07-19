@@ -14,15 +14,17 @@ import SectionCard from "../components/SectionCard";
 import CustomTooltip from "../components/CustomTooltip";
 import ChartDetailBar from "../components/ChartDetailBar";
 import DayActivitiesModal from "../components/DayActivitiesModal";
+import ReportModal from "../components/ReportModal";
 import { Icons } from "../components/Icons";
 import { colors } from "../utils/colors";
 import { useUnits } from "../utils/units";
 import { toGrowthSeries, formatGrowthTick, dailyFeedingTotals, dailySleepTotals, getEntriesForDate } from "../utils/formatters";
 
-export default function GrowthTab({ weights, heights, monthlyFeedings, monthlySleep, onEditEntry }) {
+export default function GrowthTab({ childId, weights, heights, monthlyFeedings, monthlySleep, onEditEntry }) {
   const units = useUnits();
   const [dayModal, setDayModal] = useState(null);
   const [selectedBar, setSelectedBar] = useState(null);
+  const [showReport, setShowReport] = useState(false);
   const weightSeries = toGrowthSeries(weights, "weight");
   const heightSeries = toGrowthSeries(heights, "height");
   const feedingSeries = dailyFeedingTotals(monthlyFeedings);
@@ -64,14 +66,7 @@ export default function GrowthTab({ weights, heights, monthlyFeedings, monthlySl
   return (
     <>
       {/* Latest Measurements */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-          gap: 14,
-          marginBottom: 20,
-        }}
-      >
+      <div className="stats-grid">
         <div className="fade-in fade-in-1">
           <div
             style={{
@@ -226,13 +221,7 @@ export default function GrowthTab({ weights, heights, monthlyFeedings, monthlySl
       </div>
 
       {/* Charts */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-          gap: 16,
-        }}
-      >
+      <div className="card-grid">
         {/* Daily Feeding Totals */}
         <div className="fade-in fade-in-5">
           <SectionCard title="Daily Feeding (30d)" icon={<Icons.Bottle />} color={colors.feeding}>
@@ -274,6 +263,25 @@ export default function GrowthTab({ weights, heights, monthlyFeedings, monthlySl
                 No feeding data recorded yet
               </div>
             )}
+            <button
+              onClick={() => setShowReport(true)}
+              style={{
+                display: "block",
+                width: "100%",
+                marginTop: 12,
+                padding: "6px 0",
+                background: "none",
+                border: "none",
+                color: "var(--text-dim)",
+                fontSize: 12,
+                fontWeight: 500,
+                fontFamily: "inherit",
+                cursor: "pointer",
+                textAlign: "center",
+              }}
+            >
+              Report →
+            </button>
           </SectionCard>
         </div>
 
@@ -423,6 +431,7 @@ export default function GrowthTab({ weights, heights, monthlyFeedings, monthlySl
           onClose={() => setDayModal(null)}
         />
       )}
+      {showReport && <ReportModal childId={childId} onClose={() => setShowReport(false)} />}
     </>
   );
 }

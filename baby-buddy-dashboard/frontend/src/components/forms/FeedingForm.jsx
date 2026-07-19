@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { api } from "../../api";
-import Modal, { FormField, FormSelect, FormInput, FormButton } from "../Modal";
+import Modal, { FormField, FormSelect, FormInput, FormButton, FormError } from "../Modal";
 import { colors } from "../../utils/colors";
 import { useUnits } from "../../utils/units";
+import { logError } from "../../utils/errorLog";
 
 const TYPES = [
   { value: "breast milk", label: "Breast Milk" },
@@ -37,10 +38,12 @@ export default function FeedingForm({ childId, timerId, entry, onDone, onClose }
   const [end, setEnd] = useState(entry?.end ? toLocalDatetime(new Date(entry.end)) : toLocalDatetime(now));
   const [notes, setNotes] = useState(entry?.notes || "");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
+    setError(null);
     try {
       const data = { type, method };
       if (amount) data.amount = parseFloat(amount);
@@ -60,8 +63,10 @@ export default function FeedingForm({ childId, timerId, entry, onDone, onClose }
         await api.createFeeding(data);
       }
       onDone();
-    } catch {
+    } catch (err) {
       setSaving(false);
+      setError("Save failed - check your connection and try again.");
+      logError(isEdit ? "Update Feeding" : "Save Feeding", err.message);
     }
   };
 
@@ -105,6 +110,7 @@ export default function FeedingForm({ childId, timerId, entry, onDone, onClose }
             placeholder="Optional"
           />
         </FormField>
+        <FormError message={error} />
         <FormButton color={colors.feeding} disabled={saving}>
           {saving ? "Saving..." : isEdit ? "Update Feeding" : "Save Feeding"}
         </FormButton>

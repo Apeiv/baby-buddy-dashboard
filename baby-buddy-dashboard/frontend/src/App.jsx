@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useBabyData } from "./hooks/useBabyData";
 import { useTimers } from "./hooks/useTimers";
 import { UnitContext } from "./utils/units";
 import { Icons } from "./components/Icons";
 import { colors } from "./utils/colors";
 import { getAge, formatElapsed } from "./utils/formatters";
+import { subscribeErrorLog, getErrorLog } from "./utils/errorLog";
 import OverviewTab from "./tabs/OverviewTab";
 import GrowthTab from "./tabs/GrowthTab";
 import NotesTab from "./tabs/NotesTab";
@@ -17,6 +18,7 @@ import NoteForm from "./components/forms/NoteForm";
 import WeightForm from "./components/forms/WeightForm";
 import HeightForm from "./components/forms/HeightForm";
 import TimerButton from "./components/TimerButton";
+import ErrorLogModal from "./components/ErrorLogModal";
 import "./styles.css";
 
 const TABS = [
@@ -73,12 +75,14 @@ function timerNameToType(name) {
 export default function App() {
   const data = useBabyData();
   const timer = useTimers(data.timers, data.child?.id);
+  const errorLog = useSyncExternalStore(subscribeErrorLog, getErrorLog);
   const [activeTab, setActiveTab] = useState("overview");
   const [modal, setModal] = useState(null);
   const [showActions, setShowActions] = useState(false);
   const [expandedGroup, setExpandedGroup] = useState("Track");
   const [showTimerPicker, setShowTimerPicker] = useState(false);
   const [editingTimerId, setEditingTimerId] = useState(null);
+  const [showErrorLog, setShowErrorLog] = useState(false);
 
   const closeModal = () => setModal(null);
   const handleFormDone = () => {
@@ -128,6 +132,36 @@ export default function App() {
           )}
           <button className="refresh-btn" onClick={data.refetch} title="Refresh">
             <Icons.Activity />
+          </button>
+          <button
+            className="refresh-btn"
+            style={{ position: "relative" }}
+            onClick={() => setShowErrorLog(true)}
+            title="Error log"
+          >
+            <Icons.AlertCircle />
+            {errorLog.length > 0 && (
+              <span
+                style={{
+                  position: "absolute",
+                  top: -3,
+                  right: -3,
+                  width: 16,
+                  height: 16,
+                  borderRadius: "50%",
+                  background: "#EF4444",
+                  color: "#fff",
+                  fontSize: 9,
+                  fontWeight: 700,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  lineHeight: 1,
+                }}
+              >
+                {errorLog.length > 9 ? "9+" : errorLog.length}
+              </span>
+            )}
           </button>
         </div>
       </header>
@@ -236,6 +270,7 @@ export default function App() {
         )}
         {activeTab === "growth" && (
           <GrowthTab
+            childId={data.child?.id}
             weights={data.weights}
             heights={data.heights}
             monthlyFeedings={data.monthlyFeedings}
@@ -403,6 +438,7 @@ export default function App() {
           onClose={closeModal}
         />
       )}
+      {showErrorLog && <ErrorLogModal onClose={() => setShowErrorLog(false)} />}
     </div>
     </UnitContext.Provider>
   );

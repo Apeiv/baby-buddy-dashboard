@@ -458,6 +458,20 @@ body {
   border-radius: 3px;
 }
 
+/* Card grids (quick stats, section cards) */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .app {
@@ -472,5 +486,12 @@ body {
   .fab-container {
     bottom: 16px;
     right: 16px;
+  }
+  .stats-grid {
+    gap: 10px;
+  }
+  .card-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
   }
 }

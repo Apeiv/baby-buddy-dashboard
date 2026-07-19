@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { api } from "../../api";
-import Modal, { FormField, FormInput, FormButton } from "../Modal";
+import Modal, { FormField, FormInput, FormButton, FormError } from "../Modal";
 import { colors } from "../../utils/colors";
 import { useUnits } from "../../utils/units";
+import { logError } from "../../utils/errorLog";
 
 function toLocalDate(date) {
   const d = new Date(date);
@@ -16,11 +17,13 @@ export default function WeightForm({ childId, entry, onDone, onClose }) {
   const [weight, setWeight] = useState(entry?.weight ? String(entry.weight) : "");
   const [date, setDate] = useState(entry?.date ? toLocalDate(entry.date) : toLocalDate(new Date()));
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!weight) return;
     setSaving(true);
+    setError(null);
     try {
       const data = {
         weight: parseFloat(weight),
@@ -33,8 +36,10 @@ export default function WeightForm({ childId, entry, onDone, onClose }) {
         await api.createWeight(data);
       }
       onDone();
-    } catch {
+    } catch (err) {
       setSaving(false);
+      setError("Save failed - check your connection and try again.");
+      logError(isEdit ? "Update Weight" : "Save Weight", err.message);
     }
   };
 
@@ -62,6 +67,7 @@ export default function WeightForm({ childId, entry, onDone, onClose }) {
             required
           />
         </FormField>
+        <FormError message={error} />
         <FormButton color={colors.growth} disabled={saving || !weight}>
           {saving ? "Saving..." : isEdit ? "Update Weight" : "Save Weight"}
         </FormButton>

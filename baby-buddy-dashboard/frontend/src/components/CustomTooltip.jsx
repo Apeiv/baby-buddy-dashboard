@@ -37,7 +37,7 @@ export default function CustomTooltip({ active, payload, label, labelFormatter }
               display: "inline-block",
             }}
           />
-          {p.name}: {p.value}
+          {p.name === "count" ? "feedings" : p.name}: {p.value}
           {p.name === "amount" ? ` ${units.volume}` : p.name === "minutes" ? " min" : p.name === "weight" ? ` ${units.weight}` : p.name === "height" ? ` ${units.length}` : ""}
         </div>
       ))}

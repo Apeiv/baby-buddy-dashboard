@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { api } from "../../api";
-import Modal, { FormField, FormInput, FormButton } from "../Modal";
+import Modal, { FormField, FormInput, FormButton, FormError } from "../Modal";
 
 import { colors } from "../../utils/colors";
+import { logError } from "../../utils/errorLog";
 
 function toLocalDatetime(date) {
   const pad = (n) => String(n).padStart(2, "0");
@@ -17,10 +18,12 @@ export default function SleepForm({ childId, timerId, entry, onDone, onClose }) 
   const [end, setEnd] = useState(entry?.end ? toLocalDatetime(new Date(entry.end)) : toLocalDatetime(now));
   const [notes, setNotes] = useState(entry?.notes || "");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
+    setError(null);
     try {
       if (isEdit) {
         const data = {
@@ -41,8 +44,10 @@ export default function SleepForm({ childId, timerId, entry, onDone, onClose }) 
         await api.createSleep(data);
       }
       onDone();
-    } catch {
+    } catch (err) {
       setSaving(false);
+      setError("Save failed - check your connection and try again.");
+      logError(isEdit ? "Update Sleep" : "Save Sleep", err.message);
     }
   };
 
@@ -81,6 +86,7 @@ export default function SleepForm({ childId, timerId, entry, onDone, onClose }) 
             placeholder="Optional"
           />
         </FormField>
+        <FormError message={error} />
         <FormButton color={colors.sleep} disabled={saving}>
           {saving ? "Saving..." : isEdit ? "Update Sleep" : "Save Sleep"}
         </FormButton>

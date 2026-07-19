@@ -1,6 +1,6 @@
 import { Icons } from "./Icons";
 
-export default function Modal({ title, children, onClose }) {
+export default function Modal({ title, children, onClose, maxWidth = 400 }) {
   return (
     <div
       style={{
@@ -22,7 +22,10 @@ export default function Modal({ title, children, onClose }) {
           border: "1px solid var(--border)",
           borderRadius: 16,
           width: "100%",
-          maxWidth: 400,
+          maxWidth,
+          maxHeight: "90vh",
+          display: "flex",
+          flexDirection: "column",
           overflow: "hidden",
         }}
         onClick={(e) => e.stopPropagation()}
@@ -34,6 +37,7 @@ export default function Modal({ title, children, onClose }) {
             justifyContent: "space-between",
             padding: "16px 20px",
             borderBottom: "1px solid var(--border)",
+            flexShrink: 0,
           }}
         >
           <span style={{ fontSize: 15, fontWeight: 600, color: "var(--text)" }}>
@@ -52,7 +56,7 @@ export default function Modal({ title, children, onClose }) {
             <Icons.X />
           </button>
         </div>
-        <div style={{ padding: "20px" }}>{children}</div>
+        <div style={{ padding: "20px", overflowY: "auto" }}>{children}</div>
       </div>
     </div>
   );
@@ -123,6 +127,25 @@ export function FormSelect({ options, ...props }) {
         </option>
       ))}
     </select>
+  );
+}
+
+export function FormError({ message }) {
+  if (!message) return null;
+  return (
+    <div
+      style={{
+        marginBottom: 14,
+        padding: "10px 12px",
+        borderRadius: 10,
+        background: "#EF444415",
+        border: "1px solid #EF444440",
+        color: "#EF4444",
+        fontSize: 12,
+      }}
+    >
+      {message}
+    </div>
   );
 }
 

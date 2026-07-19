@@ -15,6 +15,7 @@ import DiaperBadge from "../components/DiaperBadge";
 import CustomTooltip from "../components/CustomTooltip";
 import ChartDetailBar from "../components/ChartDetailBar";
 import DayActivitiesModal from "../components/DayActivitiesModal";
+import ChartSettingsMenu from "../components/ChartSettingsMenu";
 import { Icons } from "../components/Icons";
 import { colors } from "../utils/colors";
 import {
@@ -36,7 +37,29 @@ export default function OverviewTab({ feedings, weeklyFeedings: weeklyFeedingsRa
   const [expanded, setExpanded] = useState({});
   const [dayModal, setDayModal] = useState(null);
   const [selectedBar, setSelectedBar] = useState(null);
+  const [feedingMetrics, setFeedingMetrics] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("bbd_feeding_chart_metrics"));
+      if (saved && typeof saved === "object") return { amount: true, count: true, ...saved };
+    } catch {
+      // ignore invalid stored value
+    }
+    return { amount: true, count: true };
+  });
   const toggle = (key) => setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  const updateFeedingMetrics = (next) => {
+    setFeedingMetrics(next);
+    try {
+      localStorage.setItem("bbd_feeding_chart_metrics", JSON.stringify(next));
+    } catch {
+      // storage unavailable - preference just won't persist
+    }
+  };
+  const FEEDING_METRIC_OPTIONS = [
+    { key: "amount", label: `Amount (${units.volume})` },
+    { key: "count", label: "Feedings" },
+  ];
 
   const feedingTimeline = toFeedingTimeline(feedings, units.volume);
   const diaperTimeline = toDiaperTimeline(changes);
@@ -64,6 +87,12 @@ export default function OverviewTab({ feedings, weeklyFeedings: weeklyFeedingsRa
   const handleChartClick = (data, type) => {
     if (!data || !data.activeLabel) return;
     const label = data.activeLabel;
+    if (type === "feeding") {
+      const amount = data.activePayload?.find((p) => p.dataKey === "amount")?.value;
+      const count = data.activePayload?.find((p) => p.dataKey === "count")?.value;
+      setSelectedBar({ type, label, value: amount, value2: count });
+      return;
+    }
     const value = data.activePayload?.[0]?.value;
     setSelectedBar({ type, label, value });
   };
@@ -84,14 +113,7 @@ export default function OverviewTab({ feedings, weeklyFeedings: weeklyFeedingsRa
   return (
     <>
       {/* Quick Stats */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-          gap: 14,
-          marginBottom: 20,
-        }}
-      >
+      <div className="stats-grid">
         <div className="fade-in fade-in-1">
           <StatCard
             icon={<Icons.Bottle />}
@@ -131,16 +153,22 @@ export default function OverviewTab({ feedings, weeklyFeedings: weeklyFeedingsRa
       </div>
 
       {/* Main Grid */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-          gap: 16,
-        }}
-      >
+      <div className="card-grid">
         {/* Feeding Timeline */}
         <div className="fade-in fade-in-3">
-          <SectionCard title="Recent Feedings" icon={<Icons.Bottle />} color={colors.feeding}>
+          <SectionCard
+            title="Recent Feedings"
+            icon={<Icons.Bottle />}
+            color={colors.feeding}
+            actions={
+              <ChartSettingsMenu
+                options={FEEDING_METRIC_OPTIONS}
+                value={feedingMetrics}
+                onChange={updateFeedingMetrics}
+                color={colors.feeding}
+              />
+            }
+          >
             {feedingTimeline.length > 0 ? (
               <div style={{ display: "flex", flexDirection: "column" }}>
                 {(expanded.feedings ? feedingTimeline : feedingTimeline.slice(0, COLLAPSED_COUNT)).map((f, i, arr) => (
@@ -165,16 +193,34 @@ export default function OverviewTab({ feedings, weeklyFeedings: weeklyFeedingsRa
                 No feedings recorded today
               </div>
             )}
-            {weeklyFeedings.some((d) => d.amount > 0) && (
+            {weeklyFeedings.some((d) => d.amount > 0 || d.count > 0) && (
               <>
-                <div style={{ marginTop: 16, height: 120 }}>
+                {feedingMetrics.amount && feedingMetrics.count && (
+                  <div style={{ display: "flex", gap: 14, marginTop: 16, fontSize: 11, color: "var(--text-muted)" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                      <span style={{ width: 7, height: 7, borderRadius: 2, background: colors.feeding, display: "inline-block" }} />
+                      {units.volume}
+                    </span>
+                    <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                      <span style={{ width: 7, height: 7, borderRadius: 2, background: `${colors.feeding}55`, display: "inline-block" }} />
+                      Feedings
+                    </span>
+                  </div>
+                )}
+                <div style={{ marginTop: 8, height: 120 }}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={weeklyFeedings} barSize={18} onClick={(data) => handleChartClick(data, "feeding")}>
+                    <BarChart data={weeklyFeedings} barSize={14} barGap={4} onClick={(data) => handleChartClick(data, "feeding")}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#252836" vertical={false} />
                       <XAxis dataKey="day" tick={{ fontSize: 11, fill: "#5A6178" }} axisLine={false} tickLine={false} />
-                      <YAxis hide />
+                      <YAxis yAxisId="left" hide />
+                      <YAxis yAxisId="right" hide orientation="right" />
                       <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="amount" fill={colors.feeding} radius={[6, 6, 0, 0]} opacity={0.85} cursor="pointer" />
+                      {feedingMetrics.amount && (
+                        <Bar yAxisId="left" dataKey="amount" fill={colors.feeding} radius={[6, 6, 0, 0]} opacity={0.85} cursor="pointer" />
+                      )}
+                      {feedingMetrics.count && (
+                        <Bar yAxisId="right" dataKey="count" fill={colors.feeding} radius={[6, 6, 0, 0]} opacity={0.35} cursor="pointer" />
+                      )}
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -183,6 +229,8 @@ export default function OverviewTab({ feedings, weeklyFeedings: weeklyFeedingsRa
                     label={selectedBar.label}
                     value={selectedBar.value}
                     unit={units.volume}
+                    value2={selectedBar.value2}
+                    unit2="feedings"
                     color={colors.feeding}
                     onViewEntries={() => openDayModal(selectedBar.label, "feeding")}
                     onDismiss={() => setSelectedBar(null)}

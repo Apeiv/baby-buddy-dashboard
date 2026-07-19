@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { api } from "../../api";
-import Modal, { FormField, FormInput, FormButton } from "../Modal";
+import Modal, { FormField, FormInput, FormButton, FormError } from "../Modal";
 import { colors } from "../../utils/colors";
 import { useUnits } from "../../utils/units";
+import { logError } from "../../utils/errorLog";
 
 function toLocalDate(date) {
   const d = new Date(date);
@@ -16,11 +17,13 @@ export default function HeightForm({ childId, entry, onDone, onClose }) {
   const [height, setHeight] = useState(entry?.height ? String(entry.height) : "");
   const [date, setDate] = useState(entry?.date ? toLocalDate(entry.date) : toLocalDate(new Date()));
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!height) return;
     setSaving(true);
+    setError(null);
     try {
       const data = {
         height: parseFloat(height),
@@ -33,8 +36,10 @@ export default function HeightForm({ childId, entry, onDone, onClose }) {
         await api.createHeight(data);
       }
       onDone();
-    } catch {
+    } catch (err) {
       setSaving(false);
+      setError("Save failed - check your connection and try again.");
+      logError(isEdit ? "Update Height" : "Save Height", err.message);
     }
   };
 
@@ -62,6 +67,7 @@ export default function HeightForm({ childId, entry, onDone, onClose }) {
             required
           />
         </FormField>
+        <FormError message={error} />
         <FormButton color={colors.height} disabled={saving || !height}>
           {saving ? "Saving..." : isEdit ? "Update Height" : "Save Height"}
         </FormButton>

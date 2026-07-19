@@ -143,12 +143,23 @@ function entryDateStr(dateVal) {
 export function aggregateByDayOfWeek(entries, valueKey, dateKey = "start") {
   const days = getLast7Days();
   const sums = {};
-  days.forEach((d) => (sums[d.dateStr] = 0));
+  const counts = {};
+  days.forEach((d) => {
+    sums[d.dateStr] = 0;
+    counts[d.dateStr] = 0;
+  });
   entries.forEach((e) => {
     const key = entryDateStr(e[dateKey] || e.time || e.date);
-    if (key in sums) sums[key] += parseFloat(e[valueKey] || 0);
+    if (key in sums) {
+      sums[key] += parseFloat(e[valueKey] || 0);
+      counts[key] += 1;
+    }
   });
-  return days.map((d) => ({ day: d.label, amount: Math.round(sums[d.dateStr]) }));
+  return days.map((d) => ({
+    day: d.label,
+    amount: Math.round(sums[d.dateStr]),
+    count: counts[d.dateStr],
+  }));
 }
 
 export function aggregateSleepByDay(entries) {
@@ -222,6 +233,48 @@ export function getEntriesForDate(entries, dateLabel, dateKey = "start") {
     });
     return formattedDate === targetDate;
   });
+}
+
+export function buildDailyReport(feedings, changes, sleepEntries, numDays = 7) {
+  const days = getLastNDays(numDays);
+  const rows = {};
+  days.forEach((d) => {
+    rows[d.dateStr] = {
+      date: d.label,
+      amount: 0,
+      feedCount: 0,
+      wet: 0,
+      solid: 0,
+      both: 0,
+      diaperTotal: 0,
+      sleepHours: 0,
+    };
+  });
+  feedings.forEach((f) => {
+    const key = entryDateStr(f.start || f.time);
+    if (key in rows) {
+      rows[key].amount += parseFloat(f.amount || 0);
+      rows[key].feedCount += 1;
+    }
+  });
+  changes.forEach((c) => {
+    const key = entryDateStr(c.time);
+    if (key in rows) {
+      if (c.wet && c.solid) rows[key].both += 1;
+      else if (c.solid) rows[key].solid += 1;
+      else if (c.wet) rows[key].wet += 1;
+      rows[key].diaperTotal += 1;
+    }
+  });
+  sleepEntries.forEach((s) => {
+    const key = entryDateStr(s.start);
+    if (key in rows) rows[key].sleepHours += parseDuration(s.duration);
+  });
+  return days.map((d) => ({
+    ...rows[d.dateStr],
+    amount: Math.round(rows[d.dateStr].amount),
+    sleepHours: Math.round(rows[d.dateStr].sleepHours * 10) / 10,
+  }));
 }
 
 export function dailySleepTotals(entries, numDays = 30) {

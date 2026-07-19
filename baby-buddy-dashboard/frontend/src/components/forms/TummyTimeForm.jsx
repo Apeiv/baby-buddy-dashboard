@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { api } from "../../api";
-import Modal, { FormField, FormInput, FormButton } from "../Modal";
+import Modal, { FormField, FormInput, FormButton, FormError } from "../Modal";
 import { colors } from "../../utils/colors";
+import { logError } from "../../utils/errorLog";
 
 function toLocalDatetime(date) {
   const pad = (n) => String(n).padStart(2, "0");
@@ -16,10 +17,12 @@ export default function TummyTimeForm({ childId, timerId, entry, onDone, onClose
   const [start, setStart] = useState(entry?.start ? toLocalDatetime(new Date(entry.start)) : toLocalDatetime(tenMinsAgo));
   const [end, setEnd] = useState(entry?.end ? toLocalDatetime(new Date(entry.end)) : toLocalDatetime(now));
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
+    setError(null);
     try {
       if (isEdit) {
         const data = { start: `${start}:00`, end: `${end}:00` };
@@ -37,8 +40,10 @@ export default function TummyTimeForm({ childId, timerId, entry, onDone, onClose
         await api.createTummyTime(data);
       }
       onDone();
-    } catch {
+    } catch (err) {
       setSaving(false);
+      setError("Save failed - check your connection and try again.");
+      logError(isEdit ? "Update Tummy Time" : "Save Tummy Time", err.message);
     }
   };
 
@@ -77,6 +82,7 @@ export default function TummyTimeForm({ childId, timerId, entry, onDone, onClose
             placeholder="e.g., Lifted head"
           />
         </FormField>
+        <FormError message={error} />
         <FormButton color={colors.tummy} disabled={saving}>
           {saving ? "Saving..." : isEdit ? "Update Tummy Time" : "Save Tummy Time"}
         </FormButton>

@@ -1,0 +1,177 @@
+import { useState, useEffect } from "react";
+import Modal from "./Modal";
+import { Icons } from "./Icons";
+import { api } from "../api";
+import { buildDailyReport } from "../utils/formatters";
+import { useUnits } from "../utils/units";
+import { downloadFile } from "../utils/download";
+import { colors } from "../utils/colors";
+
+const RANGE_OPTIONS = [7, 14, 30, 90];
+
+function toLocalISODate(date) {
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+export default function ReportModal({ childId, onClose }) {
+  const units = useUnits();
+  const [rangeDays, setRangeDays] = useState(7);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [rows, setRows] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    const start = new Date();
+    start.setDate(start.getDate() - (rangeDays - 1));
+    const startMin = `${toLocalISODate(start)}T00:00:00`;
+    const timeParams = { child: childId, start_min: startMin, limit: 1000, ordering: "-start" };
+    const changeParams = { child: childId, date_min: startMin, limit: 1000, ordering: "-time" };
+
+    Promise.all([api.getFeedings(timeParams), api.getChanges(changeParams), api.getSleep(timeParams)])
+      .then(([feedingsRes, changesRes, sleepRes]) => {
+        if (cancelled) return;
+        setRows(
+          buildDailyReport(
+            feedingsRes.results || [],
+            changesRes.results || [],
+            sleepRes.results || [],
+            rangeDays
+          )
+        );
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [rangeDays, childId]);
+
+  const totals = rows.reduce(
+    (acc, r) => ({
+      amount: acc.amount + r.amount,
+      feedCount: acc.feedCount + r.feedCount,
+      wet: acc.wet + r.wet,
+      solid: acc.solid + r.solid,
+      both: acc.both + r.both,
+      sleepHours: acc.sleepHours + r.sleepHours,
+    }),
+    { amount: 0, feedCount: 0, wet: 0, solid: 0, both: 0, sleepHours: 0 }
+  );
+
+  const handleExport = () => {
+    const header = [`Date`, `Amount (${units.volume})`, "Feedings", "Wet", "Solid", "Both", "Sleep (h)"];
+    const lines = rows.map((r) =>
+      [r.date, r.amount, r.feedCount, r.wet, r.solid, r.both, r.sleepHours].join(",")
+    );
+    downloadFile(`baby-buddy-report-${rangeDays}d.csv`, [header.join(","), ...lines].join("\n"), "text/csv");
+  };
+
+  const cellStyle = { padding: "8px 6px", textAlign: "right", whiteSpace: "nowrap" };
+
+  return (
+    <Modal title="Daily Report" onClose={onClose} maxWidth={640}>
+      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+        {RANGE_OPTIONS.map((d) => (
+          <button
+            key={d}
+            onClick={() => setRangeDays(d)}
+            style={{
+              padding: "6px 14px",
+              borderRadius: 20,
+              border: rangeDays === d ? `1px solid ${colors.growth}60` : "1px solid var(--border)",
+              background: rangeDays === d ? `${colors.growth}18` : "var(--bg)",
+              color: rangeDays === d ? colors.growth : "var(--text-muted)",
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "inherit",
+            }}
+          >
+            {d}d
+          </button>
+        ))}
+        <button
+          onClick={handleExport}
+          disabled={loading || rows.length === 0}
+          style={{
+            marginLeft: "auto",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "6px 14px",
+            borderRadius: 20,
+            border: "1px solid var(--border)",
+            background: "var(--bg)",
+            color: "var(--text-muted)",
+            fontSize: 12,
+            fontWeight: 600,
+            cursor: loading || rows.length === 0 ? "default" : "pointer",
+            opacity: loading || rows.length === 0 ? 0.5 : 1,
+            fontFamily: "inherit",
+          }}
+        >
+          <Icons.Download /> CSV
+        </button>
+      </div>
+
+      {loading ? (
+        <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 40 }}>
+          Loading...
+        </div>
+      ) : error ? (
+        <div style={{ color: "#EF4444", fontSize: 13, textAlign: "center", padding: 40 }}>
+          Failed to load report: {error}
+        </div>
+      ) : (
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+            <thead>
+              <tr style={{ borderBottom: "1px solid var(--border)" }}>
+                <th style={{ textAlign: "left", padding: "8px 6px", color: "var(--text-dim)", fontWeight: 500 }}>Date</th>
+                {[`${units.volume}`, "Feedings", "Wet", "Solid", "Both", "Sleep (h)"].map((h) => (
+                  <th key={h} style={{ ...cellStyle, color: "var(--text-dim)", fontWeight: 500 }}>
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.date} style={{ borderBottom: "1px solid var(--border)" }}>
+                  <td style={{ padding: "8px 6px", color: "var(--text)", fontWeight: 600, whiteSpace: "nowrap" }}>{r.date}</td>
+                  <td style={{ ...cellStyle, color: colors.feeding }}>{r.amount || "—"}</td>
+                  <td style={{ ...cellStyle, color: "var(--text-muted)" }}>{r.feedCount || "—"}</td>
+                  <td style={{ ...cellStyle, color: "#3B82F6" }}>{r.wet || "—"}</td>
+                  <td style={{ ...cellStyle, color: "#D97706" }}>{r.solid || "—"}</td>
+                  <td style={{ ...cellStyle, color: "var(--text-muted)" }}>{r.both || "—"}</td>
+                  <td style={{ ...cellStyle, color: colors.sleep }}>{r.sleepHours || "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td style={{ padding: "10px 6px", color: "var(--text)", fontWeight: 700 }}>Total</td>
+                <td style={{ ...cellStyle, color: "var(--text)", fontWeight: 700 }}>{totals.amount}</td>
+                <td style={{ ...cellStyle, color: "var(--text)", fontWeight: 700 }}>{totals.feedCount}</td>
+                <td style={{ ...cellStyle, color: "var(--text)", fontWeight: 700 }}>{totals.wet}</td>
+                <td style={{ ...cellStyle, color: "var(--text)", fontWeight: 700 }}>{totals.solid}</td>
+                <td style={{ ...cellStyle, color: "var(--text)", fontWeight: 700 }}>{totals.both}</td>
+                <td style={{ ...cellStyle, color: "var(--text)", fontWeight: 700 }}>{totals.sleepHours.toFixed(1)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      )}
+    </Modal>
+  );
+}

@@ -1,4 +1,4 @@
-export default function ChartDetailBar({ label, value, unit, color, onViewEntries, onDismiss, actionLabel = "View entries" }) {
+export default function ChartDetailBar({ label, value, unit, value2, unit2, color, onViewEntries, onDismiss, actionLabel = "View entries" }) {
   if (!label) return null;
   return (
     <div
@@ -16,8 +16,8 @@ export default function ChartDetailBar({ label, value, unit, color, onViewEntrie
     >
       <span style={{ color: "var(--text)" }}>
         <strong style={{ color }}>{label}</strong>
-        {" — "}
-        {value} {unit}
+        {value != null && ` — ${value} ${unit || ""}`}
+        {value2 != null && ` · ${value2} ${unit2 || ""}`}
       </span>
       <div style={{ display: "flex", gap: 6 }}>
         <button
