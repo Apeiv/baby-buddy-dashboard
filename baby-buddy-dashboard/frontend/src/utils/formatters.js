@@ -30,9 +30,11 @@ export function timeAgo(dateStr) {
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins}m ago`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
+  const remainingMins = mins % 60;
+  if (hours < 24) return `${hours}h${remainingMins ? ` ${remainingMins}m` : ""} ago`;
   const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  const remainingHours = hours % 24;
+  return `${days}d${remainingHours ? ` ${remainingHours}h` : ""} ago`;
 }
 
 export function formatTime(dateStr) {
