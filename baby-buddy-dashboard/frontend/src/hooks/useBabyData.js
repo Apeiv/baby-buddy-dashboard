@@ -37,6 +37,7 @@ export function useBabyData() {
   const [medications, setMedications] = useState([]);
   const [monthlyFeedings, setMonthlyFeedings] = useState([]);
   const [monthlySleep, setMonthlySleep] = useState([]);
+  const [monthlyChanges, setMonthlyChanges] = useState([]);
   const [notes, setNotes] = useState([]);
   const [timers, setTimers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -85,6 +86,7 @@ export function useBabyData() {
         notesRes,
         monthlyFeedingsRes,
         monthlySleepRes,
+        monthlyChangesRes,
       ] = await Promise.all([
         api.getFeedings({ child: c, start_min: todayMin, start_max: todayMax, limit: 100, ordering: "-start" }),
         api.getFeedings({ child: c, start_min: weekMin, limit: 200, ordering: "-start" }),
@@ -103,6 +105,7 @@ export function useBabyData() {
         api.getNotes({ child: c, limit: 20, ordering: "-time" }),
         api.getFeedings({ child: c, start_min: monthMin, limit: 500, ordering: "-start" }),
         api.getSleep({ child: c, start_min: monthMin, limit: 500, ordering: "-start" }),
+        api.getChanges({ child: c, date_min: monthMin, limit: 500, ordering: "-time" }),
       ]);
 
       setFeedings(feedingsRes.results || []);
@@ -122,6 +125,7 @@ export function useBabyData() {
       setNotes(notesRes.results || []);
       setMonthlyFeedings(monthlyFeedingsRes.results || []);
       setMonthlySleep(monthlySleepRes.results || []);
+      setMonthlyChanges(monthlyChangesRes.results || []);
       setLastSync(new Date());
       setError(null);
     } catch (err) {
@@ -184,6 +188,7 @@ export function useBabyData() {
     setNotes(mock.notes);
     setMonthlyFeedings(mock.monthlyFeedings);
     setMonthlySleep(mock.monthlySleep);
+    setMonthlyChanges(mock.monthlyChanges);
     setLastSync(new Date());
     setLoading(false);
   }, []);
@@ -212,6 +217,7 @@ export function useBabyData() {
       setNotes(mock.notes);
       setMonthlyFeedings(mock.monthlyFeedings);
       setMonthlySleep(mock.monthlySleep);
+      setMonthlyChanges(mock.monthlyChanges);
     },
     [children, child]
   );
@@ -259,6 +265,7 @@ export function useBabyData() {
     medications,
     monthlyFeedings,
     monthlySleep,
+    monthlyChanges,
     notes,
     timers,
     loading,

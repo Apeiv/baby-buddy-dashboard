@@ -295,6 +295,7 @@ export default function App() {
             bmis={data.bmis}
             monthlyFeedings={data.monthlyFeedings}
             monthlySleep={data.monthlySleep}
+            monthlyChanges={data.monthlyChanges}
             onEditEntry={(type, entry) => setModal({ type, entry })}
           />
         )}

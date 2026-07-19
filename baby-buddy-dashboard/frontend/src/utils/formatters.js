@@ -342,3 +342,41 @@ export function dailySleepTotals(entries, numDays = 30) {
   const firstNonZero = result.findIndex((d) => d.hours > 0);
   return firstNonZero > 0 ? result.slice(firstNonZero) : result;
 }
+
+export function dailyDiaperTotals(changes, numDays = 30) {
+  const days = getLastNDays(numDays);
+  const counts = {};
+  days.forEach((d) => (counts[d.dateStr] = 0));
+  changes.forEach((c) => {
+    const key = entryDateStr(c.time);
+    if (key in counts) counts[key] += 1;
+  });
+  const result = days.map((d) => ({ date: d.label, count: counts[d.dateStr] }));
+  const firstNonZero = result.findIndex((d) => d.count > 0);
+  return firstNonZero > 0 ? result.slice(firstNonZero) : result;
+}
+
+export function buildDailyMeasurementsReport(weights, heights, headCircumferences, bmis, numDays = 30) {
+  const days = getLastNDays(numDays);
+  const rows = {};
+  days.forEach((d) => {
+    rows[d.dateStr] = { date: d.label, weight: null, height: null, headCircumference: null, bmi: null };
+  });
+  weights.forEach((w) => {
+    const key = entryDateStr(w.date);
+    if (key in rows) rows[key].weight = w.weight;
+  });
+  heights.forEach((h) => {
+    const key = entryDateStr(h.date);
+    if (key in rows) rows[key].height = h.height;
+  });
+  headCircumferences.forEach((c) => {
+    const key = entryDateStr(c.date);
+    if (key in rows) rows[key].headCircumference = c.head_circumference;
+  });
+  bmis.forEach((b) => {
+    const key = entryDateStr(b.date);
+    if (key in rows) rows[key].bmi = b.bmi;
+  });
+  return days.map((d) => rows[d.dateStr]);
+}

@@ -15,19 +15,21 @@ import CustomTooltip from "../components/CustomTooltip";
 import ChartDetailBar from "../components/ChartDetailBar";
 import DayActivitiesModal from "../components/DayActivitiesModal";
 import ReportModal from "../components/ReportModal";
+import MeasurementsReportModal from "../components/MeasurementsReportModal";
 import ChartSettingsMenu from "../components/ChartSettingsMenu";
 import { Icons } from "../components/Icons";
 import { colors } from "../utils/colors";
 import { useUnits } from "../utils/units";
-import { toGrowthSeries, formatGrowthTick, dailyFeedingTotals, dailySleepTotals, getEntriesForDate } from "../utils/formatters";
+import { toGrowthSeries, formatGrowthTick, dailyFeedingTotals, dailySleepTotals, dailyDiaperTotals, getEntriesForDate } from "../utils/formatters";
 import { clickableProps } from "../utils/a11y";
 import { useFeedingChartMetrics } from "../hooks/useFeedingChartMetrics";
 
-export default function GrowthTab({ childId, demoMode, weights, heights, headCircumferences, bmis, monthlyFeedings, monthlySleep, onEditEntry }) {
+export default function GrowthTab({ childId, demoMode, weights, heights, headCircumferences, bmis, monthlyFeedings, monthlySleep, monthlyChanges, onEditEntry }) {
   const units = useUnits();
   const [dayModal, setDayModal] = useState(null);
   const [selectedBar, setSelectedBar] = useState(null);
-  const [showReport, setShowReport] = useState(false);
+  const [showGrowthReport, setShowGrowthReport] = useState(false);
+  const [showMeasureReport, setShowMeasureReport] = useState(false);
   const [feedingMetrics, updateFeedingMetrics] = useFeedingChartMetrics();
   const weightSeries = toGrowthSeries(weights, "weight");
   const heightSeries = toGrowthSeries(heights, "height");
@@ -35,6 +37,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
   const bmiSeries = toGrowthSeries(bmis, "bmi");
   const feedingSeries = dailyFeedingTotals(monthlyFeedings);
   const sleepSeries = dailySleepTotals(monthlySleep);
+  const diaperSeries = dailyDiaperTotals(monthlyChanges || []);
 
   const FEEDING_METRIC_OPTIONS = [
     { key: "amount", label: `Amount (${units.volume})` },
@@ -58,6 +61,10 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
   const sleepDays = sleepSeries.filter((d) => d.hours > 0);
   const avgSleep = sleepDays.length
     ? (sleepDays.reduce((s, d) => s + d.hours, 0) / sleepDays.length).toFixed(1)
+    : 0;
+  const diaperDays = diaperSeries.filter((d) => d.count > 0);
+  const avgDiapers = diaperDays.length
+    ? Math.round(diaperDays.reduce((s, d) => s + d.count, 0) / diaperDays.length)
     : 0;
 
   const handleChartClick = (data, type) => {
@@ -93,7 +100,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
         <div className="fade-in fade-in-1">
           <div
             className="entry-clickable"
-            {...clickableProps(() => setShowReport(true))}
+            {...clickableProps(() => setShowMeasureReport(true))}
             style={{
               background: "var(--card-bg)",
               borderRadius: 16,
@@ -135,7 +142,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
         <div className="fade-in fade-in-2">
           <div
             className="entry-clickable"
-            {...clickableProps(() => setShowReport(true))}
+            {...clickableProps(() => setShowMeasureReport(true))}
             style={{
               background: "var(--card-bg)",
               borderRadius: 16,
@@ -177,7 +184,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
         <div className="fade-in fade-in-3">
           <div
             className="entry-clickable"
-            {...clickableProps(() => setShowReport(true))}
+            {...clickableProps(() => setShowMeasureReport(true))}
             style={{
               background: "var(--card-bg)",
               borderRadius: 16,
@@ -219,7 +226,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
         <div className="fade-in fade-in-3">
           <div
             className="entry-clickable"
-            {...clickableProps(() => setShowReport(true))}
+            {...clickableProps(() => setShowMeasureReport(true))}
             style={{
               background: "var(--card-bg)",
               borderRadius: 16,
@@ -261,7 +268,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
         <div className="fade-in fade-in-3">
           <div
             className="entry-clickable"
-            {...clickableProps(() => setShowReport(true))}
+            {...clickableProps(() => setShowGrowthReport(true))}
             style={{
               background: "var(--card-bg)",
               borderRadius: 16,
@@ -301,7 +308,47 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
         <div className="fade-in fade-in-4">
           <div
             className="entry-clickable"
-            {...clickableProps(() => setShowReport(true))}
+            {...clickableProps(() => setShowGrowthReport(true))}
+            style={{
+              background: "var(--card-bg)",
+              borderRadius: 16,
+              padding: "20px 22px",
+              border: "1px solid var(--border)",
+              cursor: "pointer",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+              <div
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: 8,
+                  background: `${colors.diaper}18`,
+                  color: colors.diaper,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Icons.Droplet />
+              </div>
+              <span style={{ fontSize: 12, color: "var(--text-dim)", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                Avg Diapers
+              </span>
+            </div>
+            <div style={{ fontSize: 28, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em" }}>
+              {avgDiapers || "—"}
+            </div>
+            <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
+              per day (30d)
+            </div>
+          </div>
+        </div>
+
+        <div className="fade-in fade-in-4">
+          <div
+            className="entry-clickable"
+            {...clickableProps(() => setShowGrowthReport(true))}
             style={{
               background: "var(--card-bg)",
               borderRadius: 16,
@@ -415,7 +462,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
               </div>
             )}
             <button
-              onClick={() => setShowReport(true)}
+              onClick={() => setShowGrowthReport(true)}
               style={{
                 display: "block",
                 width: "100%",
@@ -674,7 +721,16 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
           onClose={() => setDayModal(null)}
         />
       )}
-      {showReport && <ReportModal childId={childId} demoMode={demoMode} onClose={() => setShowReport(false)} />}
+      {showGrowthReport && <ReportModal childId={childId} demoMode={demoMode} onClose={() => setShowGrowthReport(false)} />}
+      {showMeasureReport && (
+        <MeasurementsReportModal
+          weights={weights}
+          heights={heights}
+          headCircumferences={headCircumferences}
+          bmis={bmis}
+          onClose={() => setShowMeasureReport(false)}
+        />
+      )}
     </>
   );
 }

@@ -488,6 +488,7 @@ body {
     right: 16px;
   }
   .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
   }
   .card-grid {

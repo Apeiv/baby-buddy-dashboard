@@ -1,14 +1,12 @@
 import { useState, useEffect } from "react";
 import Modal from "./Modal";
-import { Icons } from "./Icons";
 import { api } from "../api";
 import { buildDailyReport } from "../utils/formatters";
 import { useUnits } from "../utils/units";
 import { downloadFile } from "../utils/download";
 import { colors } from "../utils/colors";
 import { getMockData } from "../utils/mockData";
-
-const RANGE_OPTIONS = [7, 14, 30, 90];
+import ReportRangeBar from "./ReportRangeBar";
 
 function toLocalISODate(date) {
   const pad = (n) => String(n).padStart(2, "0");
@@ -97,56 +95,19 @@ export default function ReportModal({ childId, demoMode, onClose }) {
     const lines = rows.map((r) =>
       [r.date, r.amount, r.feedCount, r.wet, r.solid, r.both, r.sleepHours, r.tummyMinutes].join(",")
     );
-    downloadFile(`baby-buddy-report-${rangeDays}d.csv`, [header.join(","), ...lines].join("\n"), "text/csv");
+    downloadFile(`baby-buddy-growth-report-${rangeDays}d.csv`, [header.join(","), ...lines].join("\n"), "text/csv");
   };
 
   const cellStyle = { padding: "8px 6px", textAlign: "right", whiteSpace: "nowrap" };
 
   return (
-    <Modal title="Daily Report" onClose={onClose} maxWidth={720}>
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
-        {RANGE_OPTIONS.map((d) => (
-          <button
-            key={d}
-            onClick={() => setRangeDays(d)}
-            style={{
-              padding: "6px 14px",
-              borderRadius: 20,
-              border: rangeDays === d ? `1px solid ${colors.growth}60` : "1px solid var(--border)",
-              background: rangeDays === d ? `${colors.growth}18` : "var(--bg)",
-              color: rangeDays === d ? colors.growth : "var(--text-muted)",
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: "pointer",
-              fontFamily: "inherit",
-            }}
-          >
-            {d}d
-          </button>
-        ))}
-        <button
-          onClick={handleExport}
-          disabled={loading || rows.length === 0}
-          style={{
-            marginLeft: "auto",
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "6px 14px",
-            borderRadius: 20,
-            border: "1px solid var(--border)",
-            background: "var(--bg)",
-            color: "var(--text-muted)",
-            fontSize: 12,
-            fontWeight: 600,
-            cursor: loading || rows.length === 0 ? "default" : "pointer",
-            opacity: loading || rows.length === 0 ? 0.5 : 1,
-            fontFamily: "inherit",
-          }}
-        >
-          <Icons.Download /> CSV
-        </button>
-      </div>
+    <Modal title="Daily Report — Growth" onClose={onClose} maxWidth={720}>
+      <ReportRangeBar
+        rangeDays={rangeDays}
+        setRangeDays={setRangeDays}
+        onExport={handleExport}
+        exportDisabled={loading || rows.length === 0}
+      />
 
       {loading ? (
         <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 40 }}>
