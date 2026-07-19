@@ -106,13 +106,8 @@ export default function OverviewTab({ childId, demoMode, feedings, weeklyFeeding
           <StatCard
             icon={<Icons.Bottle />}
             label="Feedings"
-            value={totalFeeding > 0 ? `${Math.round(totalFeeding)} ${units.volume}` : `${feedings.length}`}
-            sub={
-              <>
-                <div>{feedings.length} today</div>
-                {feedingTimeline[0] && <div style={{ marginTop: 2 }}>Last: {feedingTimeline[0].detail}</div>}
-              </>
-            }
+            value={totalFeeding > 0 ? `${Math.round(totalFeeding)} ${units.volume} Today` : `${feedings.length} Today`}
+            sub={feedingTimeline[0] ? `Last: ${feedingTimeline[0].detail}` : undefined}
             color={colors.feeding}
             onClick={() => setShowReport(true)}
           />
