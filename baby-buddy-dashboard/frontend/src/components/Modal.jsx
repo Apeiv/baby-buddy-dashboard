@@ -45,6 +45,7 @@ export default function Modal({ title, children, onClose, maxWidth = 400 }) {
           </span>
           <button
             onClick={onClose}
+            aria-label="Close"
             style={{
               background: "none",
               border: "none",

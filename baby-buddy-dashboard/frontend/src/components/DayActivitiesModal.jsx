@@ -10,6 +10,7 @@ import {
   parseDuration,
 } from "../utils/formatters";
 import { useUnits } from "../utils/units";
+import { clickableProps } from "../utils/a11y";
 
 export default function DayActivitiesModal({ day, type, data, onEditEntry, onClose }) {
   const units = useUnits();
@@ -58,10 +59,10 @@ export default function DayActivitiesModal({ day, type, data, onEditEntry, onClo
             <div
               key={i}
               className="entry-clickable"
-              onClick={() => {
+              {...clickableProps(() => {
                 onEditEntry?.("feeding", f.entry);
                 onClose();
-              }}
+              })}
             >
               <TimelineItem
                 time={f.time}
@@ -84,10 +85,10 @@ export default function DayActivitiesModal({ day, type, data, onEditEntry, onClo
             <div
               key={i}
               className="entry-clickable"
-              onClick={() => {
+              {...clickableProps(() => {
                 onEditEntry?.("sleep", s.entry);
                 onClose();
-              }}
+              })}
             >
               <TimelineItem
                 time={`${s.start}–${s.end}`}
@@ -109,10 +110,10 @@ export default function DayActivitiesModal({ day, type, data, onEditEntry, onClo
             <div
               key={i}
               className="entry-clickable"
-              onClick={() => {
+              {...clickableProps(() => {
                 onEditEntry?.("tummy", t);
                 onClose();
-              }}
+              })}
             >
               <TimelineItem
                 time={new Date(t.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}

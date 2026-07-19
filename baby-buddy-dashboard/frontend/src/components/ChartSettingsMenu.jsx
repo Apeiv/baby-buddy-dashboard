@@ -15,6 +15,8 @@ export default function ChartSettingsMenu({ options, value, onChange, color }) {
       <button
         onClick={() => setOpen((o) => !o)}
         title="Chart settings"
+        aria-label="Chart settings"
+        aria-expanded={open}
         style={{
           width: 26,
           height: 26,

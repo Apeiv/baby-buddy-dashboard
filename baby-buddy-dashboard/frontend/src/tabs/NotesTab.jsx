@@ -4,6 +4,7 @@ import TimelineItem from "../components/TimelineItem";
 import { Icons } from "../components/Icons";
 import { colors } from "../utils/colors";
 import { toNoteTimeline } from "../utils/formatters";
+import { clickableProps } from "../utils/a11y";
 
 const COLLAPSED_COUNT = 5;
 
@@ -20,7 +21,7 @@ export default function NotesTab({ notes, onEditEntry }) {
               <div
                 key={i}
                 className="entry-clickable"
-                onClick={() => onEditEntry?.("note", n.entry)}
+                {...clickableProps(() => onEditEntry?.("note", n.entry))}
               >
                 <TimelineItem
                   time={n.time}

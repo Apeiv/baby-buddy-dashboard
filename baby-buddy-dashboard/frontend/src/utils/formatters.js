@@ -202,13 +202,24 @@ function getLastNDays(n) {
 export function dailyFeedingTotals(entries, numDays = 30) {
   const days = getLastNDays(numDays);
   const sums = {};
-  days.forEach((d) => (sums[d.dateStr] = 0));
+  const counts = {};
+  days.forEach((d) => {
+    sums[d.dateStr] = 0;
+    counts[d.dateStr] = 0;
+  });
   entries.forEach((e) => {
     const key = entryDateStr(e.start || e.time || e.date);
-    if (key in sums) sums[key] += parseFloat(e.amount || 0);
+    if (key in sums) {
+      sums[key] += parseFloat(e.amount || 0);
+      counts[key] += 1;
+    }
   });
-  const result = days.map((d) => ({ date: d.label, amount: Math.round(sums[d.dateStr]) }));
-  const firstNonZero = result.findIndex((d) => d.amount > 0);
+  const result = days.map((d) => ({
+    date: d.label,
+    amount: Math.round(sums[d.dateStr]),
+    count: counts[d.dateStr],
+  }));
+  const firstNonZero = result.findIndex((d) => d.amount > 0 || d.count > 0);
   return firstNonZero > 0 ? result.slice(firstNonZero) : result;
 }
 
@@ -235,7 +246,7 @@ export function getEntriesForDate(entries, dateLabel, dateKey = "start") {
   });
 }
 
-export function buildDailyReport(feedings, changes, sleepEntries, numDays = 7) {
+export function buildDailyReport(feedings, changes, sleepEntries, numDays = 7, tummyTimes = []) {
   const days = getLastNDays(numDays);
   const rows = {};
   days.forEach((d) => {
@@ -248,6 +259,7 @@ export function buildDailyReport(feedings, changes, sleepEntries, numDays = 7) {
       both: 0,
       diaperTotal: 0,
       sleepHours: 0,
+      tummyMinutes: 0,
     };
   });
   feedings.forEach((f) => {
@@ -270,10 +282,15 @@ export function buildDailyReport(feedings, changes, sleepEntries, numDays = 7) {
     const key = entryDateStr(s.start);
     if (key in rows) rows[key].sleepHours += parseDuration(s.duration);
   });
+  tummyTimes.forEach((t) => {
+    const key = entryDateStr(t.start);
+    if (key in rows) rows[key].tummyMinutes += parseDuration(t.duration) * 60;
+  });
   return days.map((d) => ({
     ...rows[d.dateStr],
     amount: Math.round(rows[d.dateStr].amount),
     sleepHours: Math.round(rows[d.dateStr].sleepHours * 10) / 10,
+    tummyMinutes: Math.round(rows[d.dateStr].tummyMinutes),
   }));
 }
 

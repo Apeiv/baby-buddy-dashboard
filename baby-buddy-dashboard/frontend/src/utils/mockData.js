@@ -136,6 +136,25 @@ function emmaWeeklyTummy() {
   return entries;
 }
 
+function emmaMonthlyTummy() {
+  const entries = [...emmaTummyTimes()];
+  for (let d = 1; d < 30; d++) {
+    const base = daysAgo(d);
+    const sessions = 2 + Math.floor(Math.random() * 2);
+    for (let s = 0; s < sessions; s++) {
+      const start = new Date(base);
+      start.setHours(9 + s * 4, Math.floor(Math.random() * 30));
+      const mins = 8 + Math.floor(Math.random() * 10);
+      entries.push({
+        id: 700 + d * 10 + s, child: 1,
+        start: isoLocal(start), end: isoLocal(new Date(start.getTime() + mins * 60000)),
+        duration: duration(0, mins),
+      });
+    }
+  }
+  return entries;
+}
+
 function emmaMonthlyFeedings() {
   const entries = [];
   for (let d = 0; d < 30; d++) {
@@ -290,6 +309,42 @@ function liamMonthlySleep() {
   return entries;
 }
 
+function emmaMonthlyChanges() {
+  const entries = [...emmaChanges()];
+  for (let d = 1; d < 30; d++) {
+    const base = daysAgo(d);
+    const times = [1, 4, 7, 10, 13, 16, 19, 22];
+    times.forEach((h, i) => {
+      const t = new Date(base);
+      t.setHours(h, Math.floor(Math.random() * 30));
+      const solid = i % 3 === 0;
+      entries.push({
+        id: 600 + d * 10 + i, child: 1, time: isoLocal(t),
+        wet: true, solid, color: solid ? "brown" : "", amount: null,
+      });
+    });
+  }
+  return entries;
+}
+
+function liamMonthlyChanges() {
+  const entries = [...liamChanges()];
+  for (let d = 1; d < 30; d++) {
+    const base = daysAgo(d);
+    const times = [1, 4, 8, 12];
+    times.forEach((h, i) => {
+      const t = new Date(base);
+      t.setHours(h, Math.floor(Math.random() * 30));
+      const solid = i % 2 === 0;
+      entries.push({
+        id: 600 + d * 10 + i, child: 2, time: isoLocal(t),
+        wet: true, solid, color: solid ? "brown" : "", amount: null,
+      });
+    });
+  }
+  return entries;
+}
+
 // --- Shared generators (temperatures are similar for any age) ---
 
 function generateTemperatures(childId) {
@@ -328,6 +383,8 @@ function emmaData() {
     ],
     monthlyFeedings: emmaMonthlyFeedings(),
     monthlySleep: emmaMonthlySleep(),
+    monthlyChanges: emmaMonthlyChanges(),
+    monthlyTummyTimes: emmaMonthlyTummy(),
     timers: [],
   };
 }
@@ -358,6 +415,8 @@ function liamData() {
     ],
     monthlyFeedings: liamMonthlyFeedings(),
     monthlySleep: liamMonthlySleep(),
+    monthlyChanges: liamMonthlyChanges(),
+    monthlyTummyTimes: [],
     timers: [],
   };
 }

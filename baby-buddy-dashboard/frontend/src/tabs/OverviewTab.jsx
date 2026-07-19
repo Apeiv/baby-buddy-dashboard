@@ -16,6 +16,7 @@ import CustomTooltip from "../components/CustomTooltip";
 import ChartDetailBar from "../components/ChartDetailBar";
 import DayActivitiesModal from "../components/DayActivitiesModal";
 import ChartSettingsMenu from "../components/ChartSettingsMenu";
+import ReportModal from "../components/ReportModal";
 import { Icons } from "../components/Icons";
 import { colors } from "../utils/colors";
 import {
@@ -29,14 +30,16 @@ import {
   parseDuration,
 } from "../utils/formatters";
 import { useUnits } from "../utils/units";
+import { clickableProps } from "../utils/a11y";
 
 const COLLAPSED_COUNT = 2;
 
-export default function OverviewTab({ feedings, weeklyFeedings: weeklyFeedingsRaw, sleepEntries, weeklySleep, changes, tummyTimes, weeklyTummyTimes, onEditEntry }) {
+export default function OverviewTab({ childId, demoMode, feedings, weeklyFeedings: weeklyFeedingsRaw, sleepEntries, weeklySleep, changes, tummyTimes, weeklyTummyTimes, onEditEntry }) {
   const units = useUnits();
   const [expanded, setExpanded] = useState({});
   const [dayModal, setDayModal] = useState(null);
   const [selectedBar, setSelectedBar] = useState(null);
+  const [showReport, setShowReport] = useState(false);
   const [feedingMetrics, setFeedingMetrics] = useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem("bbd_feeding_chart_metrics"));
@@ -121,6 +124,7 @@ export default function OverviewTab({ feedings, weeklyFeedings: weeklyFeedingsRa
             value={totalFeeding > 0 ? `${Math.round(totalFeeding)} ${units.volume}` : `${feedings.length}`}
             sub={`${feedings.length} feeding${feedings.length !== 1 ? "s" : ""} today`}
             color={colors.feeding}
+            onClick={() => setShowReport(true)}
           />
         </div>
         <div className="fade-in fade-in-2">
@@ -130,6 +134,7 @@ export default function OverviewTab({ feedings, weeklyFeedings: weeklyFeedingsRa
             value={`${totalSleep.toFixed(1)}h`}
             sub="Last 24 hours"
             color={colors.sleep}
+            onClick={() => setShowReport(true)}
           />
         </div>
         <div className="fade-in fade-in-3">
@@ -139,6 +144,7 @@ export default function OverviewTab({ feedings, weeklyFeedings: weeklyFeedingsRa
             value={totalDiapers}
             sub={`${wetCount} wet · ${solidCount} solid · ${bothCount} both`}
             color={colors.diaper}
+            onClick={() => setShowReport(true)}
           />
         </div>
         <div className="fade-in fade-in-4">
@@ -148,6 +154,7 @@ export default function OverviewTab({ feedings, weeklyFeedings: weeklyFeedingsRa
             value={`${Math.round(avgTummy)}m`}
             sub={`${tummyTimes.length} session${tummyTimes.length !== 1 ? "s" : ""} today`}
             color={colors.tummy}
+            onClick={() => setShowReport(true)}
           />
         </div>
       </div>
@@ -172,7 +179,7 @@ export default function OverviewTab({ feedings, weeklyFeedings: weeklyFeedingsRa
             {feedingTimeline.length > 0 ? (
               <div style={{ display: "flex", flexDirection: "column" }}>
                 {(expanded.feedings ? feedingTimeline : feedingTimeline.slice(0, COLLAPSED_COUNT)).map((f, i, arr) => (
-                  <div key={i} className="entry-clickable" onClick={() => onEditEntry?.("feeding", f.entry)}>
+                  <div key={i} className="entry-clickable" {...clickableProps(() => onEditEntry?.("feeding", f.entry))}>
                     <TimelineItem
                       time={f.time}
                       label={f.label}
@@ -247,7 +254,7 @@ export default function OverviewTab({ feedings, weeklyFeedings: weeklyFeedingsRa
             {sleepBlocks.length > 0 ? (
               <div style={{ display: "flex", flexDirection: "column" }}>
                 {(expanded.sleep ? sleepBlocks : sleepBlocks.slice(0, COLLAPSED_COUNT)).map((s, i, arr) => (
-                  <div key={i} className="entry-clickable" onClick={() => onEditEntry?.("sleep", s.entry)}>
+                  <div key={i} className="entry-clickable" {...clickableProps(() => onEditEntry?.("sleep", s.entry))}>
                     <TimelineItem
                       time={`${s.start}–${s.end}`}
                       label={`${s.duration.toFixed(1)}h${s.nap ? " · Nap" : ""}`}
@@ -306,7 +313,7 @@ export default function OverviewTab({ feedings, weeklyFeedings: weeklyFeedingsRa
                     <div
                       key={i}
                       className="entry-clickable"
-                      onClick={() => onEditEntry?.("diaper", d.entry)}
+                      {...clickableProps(() => onEditEntry?.("diaper", d.entry))}
                       style={{
                         display: "flex",
                         alignItems: "center",
@@ -432,6 +439,7 @@ export default function OverviewTab({ feedings, weeklyFeedings: weeklyFeedingsRa
           onClose={() => setDayModal(null)}
         />
       )}
+      {showReport && <ReportModal childId={childId} demoMode={demoMode} onClose={() => setShowReport(false)} />}
     </>
   );
 }

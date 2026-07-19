@@ -6,6 +6,7 @@ import { buildDailyReport } from "../utils/formatters";
 import { useUnits } from "../utils/units";
 import { downloadFile } from "../utils/download";
 import { colors } from "../utils/colors";
+import { getMockData } from "../utils/mockData";
 
 const RANGE_OPTIONS = [7, 14, 30, 90];
 
@@ -14,14 +15,30 @@ function toLocalISODate(date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
-export default function ReportModal({ childId, onClose }) {
+export default function ReportModal({ childId, demoMode, onClose }) {
   const units = useUnits();
   const [rangeDays, setRangeDays] = useState(7);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!demoMode);
   const [error, setError] = useState(null);
   const [rows, setRows] = useState([]);
 
   useEffect(() => {
+    if (demoMode) {
+      const mock = getMockData(childId);
+      setRows(
+        buildDailyReport(
+          mock.monthlyFeedings,
+          mock.monthlyChanges,
+          mock.monthlySleep,
+          rangeDays,
+          mock.monthlyTummyTimes
+        )
+      );
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -32,15 +49,21 @@ export default function ReportModal({ childId, onClose }) {
     const timeParams = { child: childId, start_min: startMin, limit: 1000, ordering: "-start" };
     const changeParams = { child: childId, date_min: startMin, limit: 1000, ordering: "-time" };
 
-    Promise.all([api.getFeedings(timeParams), api.getChanges(changeParams), api.getSleep(timeParams)])
-      .then(([feedingsRes, changesRes, sleepRes]) => {
+    Promise.all([
+      api.getFeedings(timeParams),
+      api.getChanges(changeParams),
+      api.getSleep(timeParams),
+      api.getTummyTimes(timeParams),
+    ])
+      .then(([feedingsRes, changesRes, sleepRes, tummyRes]) => {
         if (cancelled) return;
         setRows(
           buildDailyReport(
             feedingsRes.results || [],
             changesRes.results || [],
             sleepRes.results || [],
-            rangeDays
+            rangeDays,
+            tummyRes.results || []
           )
         );
       })
@@ -54,7 +77,7 @@ export default function ReportModal({ childId, onClose }) {
     return () => {
       cancelled = true;
     };
-  }, [rangeDays, childId]);
+  }, [rangeDays, childId, demoMode]);
 
   const totals = rows.reduce(
     (acc, r) => ({
@@ -64,14 +87,15 @@ export default function ReportModal({ childId, onClose }) {
       solid: acc.solid + r.solid,
       both: acc.both + r.both,
       sleepHours: acc.sleepHours + r.sleepHours,
+      tummyMinutes: acc.tummyMinutes + r.tummyMinutes,
     }),
-    { amount: 0, feedCount: 0, wet: 0, solid: 0, both: 0, sleepHours: 0 }
+    { amount: 0, feedCount: 0, wet: 0, solid: 0, both: 0, sleepHours: 0, tummyMinutes: 0 }
   );
 
   const handleExport = () => {
-    const header = [`Date`, `Amount (${units.volume})`, "Feedings", "Wet", "Solid", "Both", "Sleep (h)"];
+    const header = [`Date`, `Amount (${units.volume})`, "Feedings", "Wet", "Solid", "Both", "Sleep (h)", "Tummy (min)"];
     const lines = rows.map((r) =>
-      [r.date, r.amount, r.feedCount, r.wet, r.solid, r.both, r.sleepHours].join(",")
+      [r.date, r.amount, r.feedCount, r.wet, r.solid, r.both, r.sleepHours, r.tummyMinutes].join(",")
     );
     downloadFile(`baby-buddy-report-${rangeDays}d.csv`, [header.join(","), ...lines].join("\n"), "text/csv");
   };
@@ -79,7 +103,7 @@ export default function ReportModal({ childId, onClose }) {
   const cellStyle = { padding: "8px 6px", textAlign: "right", whiteSpace: "nowrap" };
 
   return (
-    <Modal title="Daily Report" onClose={onClose} maxWidth={640}>
+    <Modal title="Daily Report" onClose={onClose} maxWidth={720}>
       <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
         {RANGE_OPTIONS.map((d) => (
           <button
@@ -138,7 +162,7 @@ export default function ReportModal({ childId, onClose }) {
             <thead>
               <tr style={{ borderBottom: "1px solid var(--border)" }}>
                 <th style={{ textAlign: "left", padding: "8px 6px", color: "var(--text-dim)", fontWeight: 500 }}>Date</th>
-                {[`${units.volume}`, "Feedings", "Wet", "Solid", "Both", "Sleep (h)"].map((h) => (
+                {[`${units.volume}`, "Feedings", "Wet", "Solid", "Both", "Sleep (h)", "Tummy (min)"].map((h) => (
                   <th key={h} style={{ ...cellStyle, color: "var(--text-dim)", fontWeight: 500 }}>
                     {h}
                   </th>
@@ -155,6 +179,7 @@ export default function ReportModal({ childId, onClose }) {
                   <td style={{ ...cellStyle, color: "#D97706" }}>{r.solid || "—"}</td>
                   <td style={{ ...cellStyle, color: "var(--text-muted)" }}>{r.both || "—"}</td>
                   <td style={{ ...cellStyle, color: colors.sleep }}>{r.sleepHours || "—"}</td>
+                  <td style={{ ...cellStyle, color: colors.tummy }}>{r.tummyMinutes || "—"}</td>
                 </tr>
               ))}
             </tbody>
@@ -167,6 +192,7 @@ export default function ReportModal({ childId, onClose }) {
                 <td style={{ ...cellStyle, color: "var(--text)", fontWeight: 700 }}>{totals.solid}</td>
                 <td style={{ ...cellStyle, color: "var(--text)", fontWeight: 700 }}>{totals.both}</td>
                 <td style={{ ...cellStyle, color: "var(--text)", fontWeight: 700 }}>{totals.sleepHours.toFixed(1)}</td>
+                <td style={{ ...cellStyle, color: "var(--text)", fontWeight: 700 }}>{totals.tummyMinutes}</td>
               </tr>
             </tfoot>
           </table>

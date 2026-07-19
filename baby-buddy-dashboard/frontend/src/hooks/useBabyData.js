@@ -244,6 +244,7 @@ export function useBabyData() {
     error,
     lastSync,
     unitSystem,
+    demoMode: demoRef.current,
     refetch: fetchAll,
   };
 }

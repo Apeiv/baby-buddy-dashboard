@@ -6,6 +6,7 @@ import { Icons } from "./components/Icons";
 import { colors } from "./utils/colors";
 import { getAge, formatElapsed } from "./utils/formatters";
 import { subscribeErrorLog, getErrorLog } from "./utils/errorLog";
+import { clickableProps } from "./utils/a11y";
 import OverviewTab from "./tabs/OverviewTab";
 import GrowthTab from "./tabs/GrowthTab";
 import NotesTab from "./tabs/NotesTab";
@@ -130,7 +131,7 @@ export default function App() {
               {data.lastSync.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
             </span>
           )}
-          <button className="refresh-btn" onClick={data.refetch} title="Refresh">
+          <button className="refresh-btn" onClick={data.refetch} title="Refresh" aria-label="Refresh data">
             <Icons.Activity />
           </button>
           <button
@@ -138,6 +139,7 @@ export default function App() {
             style={{ position: "relative" }}
             onClick={() => setShowErrorLog(true)}
             title="Error log"
+            aria-label={`Error log${errorLog.length > 0 ? ` (${errorLog.length} unread)` : ""}`}
           >
             <Icons.AlertCircle />
             {errorLog.length > 0 && (
@@ -214,7 +216,8 @@ export default function App() {
                 className="timer-elapsed"
                 style={{ cursor: "pointer" }}
                 title="Click to edit start time"
-                onClick={() => setEditingTimerId(t.id)}
+                {...clickableProps(() => setEditingTimerId(t.id))}
+                aria-label={`Elapsed time ${formatElapsed(timer.elapsedMap[t.id] || 0)}, click to edit start time`}
               >
                 {formatElapsed(timer.elapsedMap[t.id] || 0)}
               </span>
@@ -233,6 +236,7 @@ export default function App() {
             <button
               className="timer-discard-btn"
               onClick={() => timer.discardTimer(t.id)}
+              aria-label={`Discard ${t.name} timer`}
             >
               <Icons.X />
             </button>
@@ -258,6 +262,8 @@ export default function App() {
       <main className="tab-content">
         {activeTab === "overview" && (
           <OverviewTab
+            childId={data.child?.id}
+            demoMode={data.demoMode}
             feedings={data.feedings}
             weeklyFeedings={data.weeklyFeedings}
             sleepEntries={data.sleepEntries}
@@ -271,6 +277,7 @@ export default function App() {
         {activeTab === "growth" && (
           <GrowthTab
             childId={data.child?.id}
+            demoMode={data.demoMode}
             weights={data.weights}
             heights={data.heights}
             monthlyFeedings={data.monthlyFeedings}
@@ -363,6 +370,7 @@ export default function App() {
           className="fab-btn"
           style={{ background: showActions ? "var(--text-muted)" : colors.feeding }}
           onClick={() => { setShowActions(!showActions); setShowTimerPicker(false); setExpandedGroup("Track"); }}
+          aria-label={showActions ? "Close quick actions" : "Open quick actions"}
         >
           <span style={{ transform: showActions ? "rotate(45deg)" : "none", transition: "transform 0.2s", display: "flex" }}>
             <Icons.Plus />

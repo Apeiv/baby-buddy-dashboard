@@ -19,8 +19,9 @@ import { Icons } from "../components/Icons";
 import { colors } from "../utils/colors";
 import { useUnits } from "../utils/units";
 import { toGrowthSeries, formatGrowthTick, dailyFeedingTotals, dailySleepTotals, getEntriesForDate } from "../utils/formatters";
+import { clickableProps } from "../utils/a11y";
 
-export default function GrowthTab({ childId, weights, heights, monthlyFeedings, monthlySleep, onEditEntry }) {
+export default function GrowthTab({ childId, demoMode, weights, heights, monthlyFeedings, monthlySleep, onEditEntry }) {
   const units = useUnits();
   const [dayModal, setDayModal] = useState(null);
   const [selectedBar, setSelectedBar] = useState(null);
@@ -37,6 +38,10 @@ export default function GrowthTab({ childId, weights, heights, monthlyFeedings, 
   const feedingDays = feedingSeries.filter((d) => d.amount > 0);
   const avgFeeding = feedingDays.length
     ? Math.round(feedingDays.reduce((s, d) => s + d.amount, 0) / feedingDays.length)
+    : 0;
+  const feedCountDays = feedingSeries.filter((d) => d.count > 0);
+  const avgFeedCount = feedCountDays.length
+    ? Math.round(feedCountDays.reduce((s, d) => s + d.count, 0) / feedCountDays.length)
     : 0;
   const sleepDays = sleepSeries.filter((d) => d.hours > 0);
   const avgSleep = sleepDays.length
@@ -69,11 +74,14 @@ export default function GrowthTab({ childId, weights, heights, monthlyFeedings, 
       <div className="stats-grid">
         <div className="fade-in fade-in-1">
           <div
+            className="entry-clickable"
+            {...clickableProps(() => setShowReport(true))}
             style={{
               background: "var(--card-bg)",
               borderRadius: 16,
               padding: "20px 22px",
               border: "1px solid var(--border)",
+              cursor: "pointer",
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
@@ -108,11 +116,14 @@ export default function GrowthTab({ childId, weights, heights, monthlyFeedings, 
 
         <div className="fade-in fade-in-2">
           <div
+            className="entry-clickable"
+            {...clickableProps(() => setShowReport(true))}
             style={{
               background: "var(--card-bg)",
               borderRadius: 16,
               padding: "20px 22px",
               border: "1px solid var(--border)",
+              cursor: "pointer",
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
@@ -147,11 +158,14 @@ export default function GrowthTab({ childId, weights, heights, monthlyFeedings, 
 
         <div className="fade-in fade-in-3">
           <div
+            className="entry-clickable"
+            {...clickableProps(() => setShowReport(true))}
             style={{
               background: "var(--card-bg)",
               borderRadius: 16,
               padding: "20px 22px",
               border: "1px solid var(--border)",
+              cursor: "pointer",
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
@@ -177,18 +191,21 @@ export default function GrowthTab({ childId, weights, heights, monthlyFeedings, 
               {avgFeeding ? `${avgFeeding} ${units.volume}` : "—"}
             </div>
             <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
-              per day (30d)
+              {avgFeedCount ? `${avgFeedCount} feedings/day` : "per day"} (30d)
             </div>
           </div>
         </div>
 
         <div className="fade-in fade-in-4">
           <div
+            className="entry-clickable"
+            {...clickableProps(() => setShowReport(true))}
             style={{
               background: "var(--card-bg)",
               borderRadius: 16,
               padding: "20px 22px",
               border: "1px solid var(--border)",
+              cursor: "pointer",
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
@@ -431,7 +448,7 @@ export default function GrowthTab({ childId, weights, heights, monthlyFeedings, 
           onClose={() => setDayModal(null)}
         />
       )}
-      {showReport && <ReportModal childId={childId} onClose={() => setShowReport(false)} />}
+      {showReport && <ReportModal childId={childId} demoMode={demoMode} onClose={() => setShowReport(false)} />}
     </>
   );
 }

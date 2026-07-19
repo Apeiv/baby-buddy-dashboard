@@ -69,6 +69,7 @@ export default function DiaperForm({ childId, entry, onDone, onClose, preset }) 
               key={btn.key}
               type="button"
               onClick={btn.toggle}
+              aria-pressed={btn.active}
               style={{
                 flex: 1,
                 padding: "10px 16px",
