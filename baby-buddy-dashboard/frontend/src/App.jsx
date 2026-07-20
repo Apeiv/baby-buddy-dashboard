@@ -4,7 +4,7 @@ import { useTimers } from "./hooks/useTimers";
 import { UnitContext } from "./utils/units";
 import { Icons } from "./components/Icons";
 import { colors } from "./utils/colors";
-import { getAge, formatElapsed } from "./utils/formatters";
+import { getAge, formatElapsed, getMedicationStatus } from "./utils/formatters";
 import { subscribeErrorLog, getErrorLog } from "./utils/errorLog";
 import { clickableProps } from "./utils/a11y";
 import OverviewTab from "./tabs/OverviewTab";
@@ -22,7 +22,7 @@ import HeadCircumferenceForm from "./components/forms/HeadCircumferenceForm";
 import BmiForm from "./components/forms/BmiForm";
 import MedicationForm from "./components/forms/MedicationForm";
 import TimerButton from "./components/TimerButton";
-import ErrorLogModal from "./components/ErrorLogModal";
+import SettingsModal from "./components/SettingsModal";
 import "./styles.css";
 
 const TABS = [
@@ -94,7 +94,8 @@ export default function App() {
   const [expandedGroup, setExpandedGroup] = useState("Track");
   const [showTimerPicker, setShowTimerPicker] = useState(false);
   const [editingTimerId, setEditingTimerId] = useState(null);
-  const [showErrorLog, setShowErrorLog] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const hasOverdueMedication = getMedicationStatus(data.medications || []).some((s) => s.overdue);
 
   const closeModal = () => setModal(null);
   const handleFormDone = () => {
@@ -142,17 +143,14 @@ export default function App() {
               {data.lastSync.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
             </span>
           )}
-          <button className="refresh-btn" onClick={data.refetch} title="Refresh" aria-label="Refresh data">
-            <Icons.Activity />
-          </button>
           <button
             className="refresh-btn"
             style={{ position: "relative" }}
-            onClick={() => setShowErrorLog(true)}
-            title="Error log"
-            aria-label={`Error log${errorLog.length > 0 ? ` (${errorLog.length} unread)` : ""}`}
+            onClick={() => setShowSettings(true)}
+            title="Settings"
+            aria-label={`Settings${errorLog.length > 0 ? ` (${errorLog.length} unread errors)` : ""}`}
           >
-            <Icons.AlertCircle />
+            <Icons.Settings />
             {errorLog.length > 0 && (
               <span
                 style={{
@@ -262,9 +260,16 @@ export default function App() {
             key={tab.id}
             className={`tab-btn ${activeTab === tab.id ? "tab-active" : ""}`}
             onClick={() => setActiveTab(tab.id)}
+            style={{ position: "relative" }}
           >
             {tab.icon}
             {tab.label}
+            {tab.id === "notes" && hasOverdueMedication && (
+              <span
+                className="tab-alert-dot"
+                aria-label="Medication overdue"
+              />
+            )}
           </button>
         ))}
       </nav>
@@ -302,6 +307,7 @@ export default function App() {
         {activeTab === "notes" && (
           <NotesTab
             childId={data.child?.id}
+            demoMode={data.demoMode}
             notes={data.notes}
             medications={data.medications}
             onEditEntry={(type, entry) => setModal({ type, entry })}
@@ -487,7 +493,15 @@ export default function App() {
           onClose={closeModal}
         />
       )}
-      {showErrorLog && <ErrorLogModal onClose={() => setShowErrorLog(false)} />}
+      {showSettings && (
+        <SettingsModal
+          connected={!data.error}
+          lastSync={data.lastSync}
+          errorMessage={data.error}
+          onRefresh={data.refetch}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
     </div>
     </UnitContext.Provider>
   );

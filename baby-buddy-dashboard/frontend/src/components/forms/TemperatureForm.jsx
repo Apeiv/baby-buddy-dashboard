@@ -1,13 +1,21 @@
 import { useState } from "react";
 import { api } from "../../api";
 import Modal, { FormField, FormInput, FormButton, FormError } from "../Modal";
+import DeleteButton from "../DeleteButton";
 import { colors } from "../../utils/colors";
 import { useUnits } from "../../utils/units";
 import { logError } from "../../utils/errorLog";
 
-export default function TemperatureForm({ childId, onDone, onClose }) {
+function toLocalDatetime(date) {
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+export default function TemperatureForm({ childId, entry, onDone, onClose }) {
   const units = useUnits();
-  const [temp, setTemp] = useState("");
+  const isEdit = !!entry;
+  const [temp, setTemp] = useState(entry?.temperature != null ? String(entry.temperature) : "");
+  const [time, setTime] = useState(entry?.time ? toLocalDatetime(new Date(entry.time)) : toLocalDatetime(new Date()));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
@@ -17,20 +25,34 @@ export default function TemperatureForm({ childId, onDone, onClose }) {
     setSaving(true);
     setError(null);
     try {
-      await api.createTemperature({
-        child: childId,
-        temperature: parseFloat(temp),
-      });
+      const data = { temperature: parseFloat(temp), time: `${time}:00` };
+      if (isEdit) {
+        await api.updateTemperature(entry.id, data);
+      } else {
+        data.child = childId;
+        await api.createTemperature(data);
+      }
       onDone();
     } catch (err) {
       setSaving(false);
       setError("Save failed - check your connection and try again.");
-      logError("Save Temperature", err.message);
+      logError(isEdit ? "Update Temperature" : "Save Temperature", err.message);
+    }
+  };
+
+  const handleDelete = async () => {
+    setError(null);
+    try {
+      await api.deleteTemperature(entry.id);
+      onDone();
+    } catch (err) {
+      setError("Delete failed - check your connection and try again.");
+      logError("Delete Temperature", err.message);
     }
   };
 
   return (
-    <Modal title="Log Temperature" onClose={onClose}>
+    <Modal title={isEdit ? "Edit Temperature" : "Log Temperature"} onClose={onClose}>
       <form onSubmit={handleSubmit}>
         <FormField label={`Temperature (${units.temp})`}>
           <FormInput
@@ -42,11 +64,21 @@ export default function TemperatureForm({ childId, onDone, onClose }) {
             max="45"
             step="0.1"
             autoFocus
+            required
+          />
+        </FormField>
+        <FormField label="Time">
+          <FormInput
+            type="datetime-local"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            required
           />
         </FormField>
         <FormError message={error} />
+        {isEdit && <DeleteButton onDelete={handleDelete} disabled={saving} />}
         <FormButton color={colors.temp} disabled={saving || !temp}>
-          {saving ? "Saving..." : "Save Temperature"}
+          {saving ? "Saving..." : isEdit ? "Update Temperature" : "Save Temperature"}
         </FormButton>
       </form>
     </Modal>

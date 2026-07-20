@@ -70,6 +70,7 @@ export const api = {
     request("temperature/", { method: "POST", body: JSON.stringify(data) }),
   updateTemperature: (id, data) =>
     request(`temperature/${id}/`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteTemperature: (id) => request(`temperature/${id}/`, { method: "DELETE" }),
 
   // Medication
   getMedication: (params) => request(`medication/${qs(params)}`),

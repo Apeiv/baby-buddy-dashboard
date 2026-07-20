@@ -1,5 +1,7 @@
 import os
 import json
+import asyncio
+import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -8,6 +10,10 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import httpx
 
+from backend.medication_alerts import run_medication_alert_loop
+
+logger = logging.getLogger(__name__)
+
 # --- Configuration ---
 
 BABY_BUDDY_URL = os.environ.get("BABY_BUDDY_URL", "").rstrip("/")
@@ -15,6 +21,7 @@ BABY_BUDDY_API_KEY = os.environ.get("BABY_BUDDY_API_KEY", "")
 REFRESH_INTERVAL = int(os.environ.get("REFRESH_INTERVAL", "30"))
 DEMO_MODE = os.environ.get("DEMO_MODE", "").lower() in ("true", "1", "yes")
 UNIT_SYSTEM = os.environ.get("UNIT_SYSTEM", "metric").lower()
+ENABLE_MEDICATION_ALERTS = os.environ.get("ENABLE_MEDICATION_ALERTS", "").lower() in ("true", "1", "yes")
 
 # Fallback: read from HA add-on options.json
 if not BABY_BUDDY_URL:
@@ -26,17 +33,21 @@ if not BABY_BUDDY_URL:
         REFRESH_INTERVAL = opts.get("refresh_interval", 30)
         DEMO_MODE = DEMO_MODE or opts.get("demo_mode", False)
         UNIT_SYSTEM = opts.get("unit_system", UNIT_SYSTEM)
+        ENABLE_MEDICATION_ALERTS = ENABLE_MEDICATION_ALERTS or opts.get("enable_medication_alerts", False)
+
+SUPERVISOR_TOKEN = os.environ.get("SUPERVISOR_TOKEN", "")
 
 STATIC_DIR = Path(__file__).parent.parent / "static"
 
 # --- App lifecycle ---
 
 http_client: httpx.AsyncClient | None = None
+medication_alert_task: asyncio.Task | None = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global http_client
+    global http_client, medication_alert_task
     http_client = httpx.AsyncClient(
         base_url=BABY_BUDDY_URL,
         headers={
@@ -46,7 +57,25 @@ async def lifespan(app: FastAPI):
         timeout=15.0,
         limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
     )
+
+    if ENABLE_MEDICATION_ALERTS and not DEMO_MODE and SUPERVISOR_TOKEN and BABY_BUDDY_URL:
+        medication_alert_task = asyncio.create_task(
+            run_medication_alert_loop(http_client, SUPERVISOR_TOKEN)
+        )
+    elif ENABLE_MEDICATION_ALERTS:
+        logger.warning(
+            "enable_medication_alerts is on but SUPERVISOR_TOKEN/BABY_BUDDY_URL is missing "
+            "or demo mode is active; skipping Home Assistant entity updates"
+        )
+
     yield
+
+    if medication_alert_task:
+        medication_alert_task.cancel()
+        try:
+            await medication_alert_task
+        except asyncio.CancelledError:
+            pass
     await http_client.aclose()
 
 

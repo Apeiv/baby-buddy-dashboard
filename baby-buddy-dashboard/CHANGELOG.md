@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.4.0
+
+- Replaced the two separate header icons (manual refresh, error log)
+  with a single Settings panel: a connection-status row ("Connected"
+  in green with last sync time, or the error in red) followed by the
+  error log/export/clear section that used to be its own popup.
+- Temperature entries can now be edited and deleted, like every other
+  metric - previously there was no edit mode at all. Added a
+  Temperature card (Notes & Meds tab, next to Medications) with a
+  48h/72h/96h trend chart, since a short high-resolution window
+  matters more than a 30-day trend when tracking a fever.
+- Added a small pulsing red dot on the "Notes & Meds" tab button
+  whenever any medication is currently overdue, so it's visible
+  without opening the tab.
+- Added an opt-in "Medication Alerts" option that exposes a single
+  `binary_sensor.baby_buddy_medication_overdue` entity in Home
+  Assistant (via the Supervisor's Core API, no MQTT broker needed),
+  reflecting whether any medication is currently overdue across all
+  children. Off by default; build your own automation/notification
+  on top of it once enabled.
+- Added an automated test suite: Vitest for the frontend, pytest for
+  the backend, both fully mocked with zero live calls to a real Baby
+  Buddy or Home Assistant instance.
+
 ## 1.3.4
 
 - Added the ability to delete an entry when editing it - every "Edit"
