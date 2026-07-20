@@ -12,6 +12,7 @@ import {
   getMedicationStatus,
   dailyDiaperTotals,
   buildDailyMeasurementsReport,
+  toFeedingTimeline,
 } from "./formatters";
 
 const NOW = new Date("2026-07-20T12:00:00.000Z");
@@ -209,5 +210,27 @@ describe("buildDailyMeasurementsReport", () => {
     expect(today.headCircumference).toBe(38);
     expect(today.height).toBeNull();
     expect(today.bmi).toBeNull();
+  });
+});
+
+describe("toFeedingTimeline", () => {
+  // Most-recent-first, matching the "-start" ordering the API/mock data always use.
+  const feedings = [
+    { start: new Date(NOW.getTime() - 30 * 60_000).toISOString(), amount: 120 },
+    { start: new Date(NOW.getTime() - 73 * 60_000).toISOString(), amount: 150 },
+    { start: new Date(NOW.getTime() - 130 * 60_000).toISOString(), amount: 130 },
+  ];
+
+  it("shows time-since-now only for the most recent feeding", () => {
+    const [latest] = toFeedingTimeline(feedings);
+    expect(latest.detail).toBe("30m ago");
+  });
+
+  it("shows the gap to the next (more recent) feeding for every other entry", () => {
+    const timeline = toFeedingTimeline(feedings);
+    // 73m ago -> 30m ago is a 43 minute gap
+    expect(timeline[1].detail).toBe("43m gap");
+    // 130m ago -> 73m ago is a 57 minute gap
+    expect(timeline[2].detail).toBe("57m gap");
   });
 });

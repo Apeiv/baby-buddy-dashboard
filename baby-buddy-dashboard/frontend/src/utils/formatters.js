@@ -60,15 +60,25 @@ export function formatDuration(durationStr) {
 }
 
 export function toFeedingTimeline(feedings, volumeUnit = "mL") {
-  return feedings.map((f) => ({
-    time: formatTime(f.end || f.start),
-    label: `${f.amount ? f.amount + " " + volumeUnit : ""} ${f.method || f.type || ""}`.trim() || "Feeding",
-    detail: timeAgo(f.end || f.start),
-    amount: f.amount || 0,
-    type: f.type,
-    method: f.method,
-    entry: f,
-  }));
+  // feedings is ordered most-recent-first. The newest entry shows time since now;
+  // every other entry shows the gap to the next (more recent) feeding instead, since
+  // that spacing between feeds is more useful than a second "time ago" from now.
+  return feedings.map((f, i, arr) => {
+    const thisTime = new Date(f.end || f.start).getTime();
+    const detail =
+      i === 0
+        ? timeAgo(f.end || f.start)
+        : `${formatElapsedHM(new Date(arr[i - 1].end || arr[i - 1].start).getTime() - thisTime)} gap`;
+    return {
+      time: formatTime(f.end || f.start),
+      label: `${f.amount ? f.amount + " " + volumeUnit : ""} ${f.method || f.type || ""}`.trim() || "Feeding",
+      detail,
+      amount: f.amount || 0,
+      type: f.type,
+      method: f.method,
+      entry: f,
+    };
+  });
 }
 
 export function toDiaperTimeline(changes) {

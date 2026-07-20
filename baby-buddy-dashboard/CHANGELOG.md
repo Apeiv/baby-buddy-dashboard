@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.1
+
+- Fixed the Recent Feedings list showing "X ago" (time since now) on
+  every entry, which was redundant past the first one. Only the most
+  recent feeding now shows time-since-now; every other entry shows
+  the gap to the next (more recent) feeding instead, e.g. "43m gap" -
+  the actual spacing between feeds, not a second "ago" for the same
+  moment in time.
+
 ## 1.4.0
 
 - Replaced the two separate header icons (manual refresh, error log)
