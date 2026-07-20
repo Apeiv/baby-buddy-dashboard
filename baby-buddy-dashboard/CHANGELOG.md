@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.2
+
+- Added an "avg gap" line to the Growth tab's Avg Feeding card (e.g.
+  "~4h 39m avg gap") - the actual average time between consecutive
+  feedings over the last 30 days, not just a derived "feedings/day"
+  count.
+
 ## 1.4.1
 
 - Fixed the Recent Feedings list showing "X ago" (time since now) on

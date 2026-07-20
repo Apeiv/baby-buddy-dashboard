@@ -20,7 +20,7 @@ import ChartSettingsMenu from "../components/ChartSettingsMenu";
 import { Icons } from "../components/Icons";
 import { colors } from "../utils/colors";
 import { useUnits } from "../utils/units";
-import { toGrowthSeries, formatGrowthTick, dailyFeedingTotals, dailySleepTotals, dailyDiaperTotals, getEntriesForDate } from "../utils/formatters";
+import { toGrowthSeries, formatGrowthTick, dailyFeedingTotals, dailySleepTotals, dailyDiaperTotals, getEntriesForDate, averageFeedingGapMs, formatElapsedHM } from "../utils/formatters";
 import { clickableProps } from "../utils/a11y";
 import { useFeedingChartMetrics } from "../hooks/useFeedingChartMetrics";
 
@@ -58,6 +58,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
   const avgFeedCount = feedCountDays.length
     ? Math.round(feedCountDays.reduce((s, d) => s + d.count, 0) / feedCountDays.length)
     : 0;
+  const avgFeedingGapMs = averageFeedingGapMs(monthlyFeedings);
   const sleepDays = sleepSeries.filter((d) => d.hours > 0);
   const avgSleep = sleepDays.length
     ? (sleepDays.reduce((s, d) => s + d.hours, 0) / sleepDays.length).toFixed(1)
@@ -302,6 +303,11 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
             <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
               {avgFeedCount ? `${avgFeedCount} feedings/day` : "per day"} (30d)
             </div>
+            {avgFeedingGapMs && (
+              <div style={{ fontSize: 12, color: "var(--text-dim)", marginTop: 2 }}>
+                ~{formatElapsedHM(avgFeedingGapMs)} avg gap
+              </div>
+            )}
           </div>
         </div>
 

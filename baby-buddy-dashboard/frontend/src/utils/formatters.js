@@ -274,6 +274,16 @@ function getLastNDays(n) {
   return result;
 }
 
+export function averageFeedingGapMs(feedings) {
+  if (!feedings || feedings.length < 2) return null;
+  const times = feedings
+    .map((f) => new Date(f.end || f.start).getTime())
+    .sort((a, b) => a - b);
+  let totalGap = 0;
+  for (let i = 1; i < times.length; i++) totalGap += times[i] - times[i - 1];
+  return totalGap / (times.length - 1);
+}
+
 export function dailyFeedingTotals(entries, numDays = 30) {
   const days = getLastNDays(numDays);
   const sums = {};

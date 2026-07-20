@@ -13,6 +13,7 @@ import {
   dailyDiaperTotals,
   buildDailyMeasurementsReport,
   toFeedingTimeline,
+  averageFeedingGapMs,
 } from "./formatters";
 
 const NOW = new Date("2026-07-20T12:00:00.000Z");
@@ -232,5 +233,32 @@ describe("toFeedingTimeline", () => {
     expect(timeline[1].detail).toBe("43m gap");
     // 130m ago -> 73m ago is a 57 minute gap
     expect(timeline[2].detail).toBe("57m gap");
+  });
+});
+
+describe("averageFeedingGapMs", () => {
+  it("returns null with fewer than 2 feedings", () => {
+    expect(averageFeedingGapMs([])).toBeNull();
+    expect(averageFeedingGapMs([{ start: NOW.toISOString() }])).toBeNull();
+  });
+
+  it("averages the gaps between consecutive feedings regardless of input order", () => {
+    // 3 feedings 1h apart each -> two 60-minute gaps, unsorted input on purpose
+    const feedings = [
+      { start: new Date(NOW.getTime() - 2 * 3600_000).toISOString() },
+      { start: NOW.toISOString() },
+      { start: new Date(NOW.getTime() - 3600_000).toISOString() },
+    ];
+    expect(averageFeedingGapMs(feedings)).toBe(3600_000);
+  });
+
+  it("weights uneven gaps by their actual duration", () => {
+    // gaps of 30m and 90m -> average 60m
+    const feedings = [
+      { start: new Date(NOW.getTime() - 120 * 60_000).toISOString() },
+      { start: new Date(NOW.getTime() - 90 * 60_000).toISOString() },
+      { start: NOW.toISOString() },
+    ];
+    expect(averageFeedingGapMs(feedings)).toBe(60 * 60_000);
   });
 });
