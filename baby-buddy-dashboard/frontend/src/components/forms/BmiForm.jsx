@@ -4,6 +4,7 @@ import Modal, { FormField, FormInput, FormButton, FormError } from "../Modal";
 import DeleteButton from "../DeleteButton";
 import { colors } from "../../utils/colors";
 import { logError } from "../../utils/errorLog";
+import { useTranslation } from "../../locales";
 
 function toLocalDate(date) {
   const d = new Date(date);
@@ -12,6 +13,7 @@ function toLocalDate(date) {
 }
 
 export default function BmiForm({ childId, entry, onDone, onClose }) {
+  const t = useTranslation();
   const isEdit = !!entry;
   const [bmi, setBmi] = useState(entry?.bmi ? String(entry.bmi) : "");
   const [date, setDate] = useState(entry?.date ? toLocalDate(entry.date) : toLocalDate(new Date()));
@@ -37,7 +39,7 @@ export default function BmiForm({ childId, entry, onDone, onClose }) {
       onDone();
     } catch (err) {
       setSaving(false);
-      setError("Save failed - check your connection and try again.");
+      setError(t("common.saveFailed"));
       logError(isEdit ? "Update BMI" : "Save BMI", err.message);
     }
   };
@@ -48,15 +50,15 @@ export default function BmiForm({ childId, entry, onDone, onClose }) {
       await api.deleteBmi(entry.id);
       onDone();
     } catch (err) {
-      setError("Delete failed - check your connection and try again.");
+      setError(t("common.deleteFailed"));
       logError("Delete BMI", err.message);
     }
   };
 
   return (
-    <Modal title={isEdit ? "Edit BMI" : "Log BMI"} onClose={onClose}>
+    <Modal title={isEdit ? t("bmiForm.editTitle") : t("bmiForm.logTitle")} onClose={onClose}>
       <form onSubmit={handleSubmit}>
-        <FormField label="BMI">
+        <FormField label={t("bmiForm.amount")}>
           <FormInput
             type="number"
             value={bmi}
@@ -69,7 +71,7 @@ export default function BmiForm({ childId, entry, onDone, onClose }) {
             required
           />
         </FormField>
-        <FormField label="Date">
+        <FormField label={t("common.date")}>
           <FormInput
             type="date"
             value={date}
@@ -80,7 +82,7 @@ export default function BmiForm({ childId, entry, onDone, onClose }) {
         <FormError message={error} />
         {isEdit && <DeleteButton onDelete={handleDelete} disabled={saving} />}
         <FormButton color={colors.bmi} disabled={saving || !bmi}>
-          {saving ? "Saving..." : isEdit ? "Update BMI" : "Save BMI"}
+          {saving ? t("common.saving") : isEdit ? t("bmiForm.update") : t("bmiForm.save")}
         </FormButton>
       </form>
     </Modal>

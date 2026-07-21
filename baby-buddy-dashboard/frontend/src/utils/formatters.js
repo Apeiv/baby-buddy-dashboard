@@ -1,3 +1,5 @@
+import { translate as t, getLocale } from "../locales";
+
 export function getAge(birthDate) {
   const birth = new Date(birthDate);
   const now = new Date();
@@ -8,14 +10,14 @@ export function getAge(birthDate) {
   if (days < 0) months--;
   const adjustedDays = days < 0 ? 30 + days : days;
   if (months < 1)
-    return `${Math.max(0, Math.floor((now - birth) / 86400000))} days`;
+    return t("time.ageDays", { days: Math.max(0, Math.floor((now - birth) / 86400000)) });
   if (months < 12)
-    return `${months}mo ${adjustedDays}d`;
+    return t("time.ageMonthsDays", { months, days: adjustedDays });
   const years = Math.floor(months / 12);
   const remainingMonths = months % 12;
   if (remainingMonths === 0)
-    return `${years}y`;
-  return `${years}y ${remainingMonths}mo`;
+    return t("time.ageYears", { years });
+  return t("time.ageYearsMonths", { years, months: remainingMonths });
 }
 
 export function formatElapsed(seconds) {
@@ -27,18 +29,18 @@ export function formatElapsed(seconds) {
 export function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return t("time.justNow");
+  if (mins < 60) return t("time.minutesAgo", { m: mins });
   const hours = Math.floor(mins / 60);
   const remainingMins = mins % 60;
-  if (hours < 24) return `${hours}h${remainingMins ? ` ${remainingMins}m` : ""} ago`;
+  if (hours < 24) return t("time.hoursAgo", { h: hours, m: remainingMins ? ` ${remainingMins}m` : "" });
   const days = Math.floor(hours / 24);
   const remainingHours = hours % 24;
-  return `${days}d${remainingHours ? ` ${remainingHours}h` : ""} ago`;
+  return t("time.daysAgo", { d: days, h: remainingHours ? ` ${remainingHours}h` : "" });
 }
 
 export function formatTime(dateStr) {
-  return new Date(dateStr).toLocaleTimeString([], {
+  return new Date(dateStr).toLocaleTimeString(getLocale(), {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -59,6 +61,28 @@ export function formatDuration(durationStr) {
   return `${hours.toFixed(1)}h`;
 }
 
+const FEEDING_METHOD_KEYS = {
+  bottle: "feedingForm.methods.bottle",
+  "left breast": "feedingForm.methods.leftBreast",
+  "right breast": "feedingForm.methods.rightBreast",
+  "both breasts": "feedingForm.methods.bothBreasts",
+  "parent fed": "feedingForm.methods.parentFed",
+  "self fed": "feedingForm.methods.selfFed",
+};
+
+const FEEDING_TYPE_KEYS = {
+  "breast milk": "feedingForm.types.breastMilk",
+  formula: "feedingForm.types.formula",
+  "fortified breast milk": "feedingForm.types.fortifiedBreastMilk",
+  "solid food": "feedingForm.types.solidFood",
+};
+
+function translateFeedingMethodOrType(value) {
+  if (!value) return "";
+  const key = FEEDING_METHOD_KEYS[value] || FEEDING_TYPE_KEYS[value];
+  return key ? t(key) : value;
+}
+
 export function toFeedingTimeline(feedings, volumeUnit = "mL") {
   // feedings is ordered most-recent-first. The newest entry shows time since now;
   // every other entry shows the gap to the next (more recent) feeding instead, since
@@ -68,10 +92,10 @@ export function toFeedingTimeline(feedings, volumeUnit = "mL") {
     const detail =
       i === 0
         ? timeAgo(f.end || f.start)
-        : `${formatElapsedHM(new Date(arr[i - 1].end || arr[i - 1].start).getTime() - thisTime)} gap`;
+        : t("time.gap", { elapsed: formatElapsedHM(new Date(arr[i - 1].end || arr[i - 1].start).getTime() - thisTime) });
     return {
       time: formatTime(f.end || f.start),
-      label: `${f.amount ? f.amount + " " + volumeUnit : ""} ${f.method || f.type || ""}`.trim() || "Feeding",
+      label: `${f.amount ? f.amount + " " + volumeUnit : ""} ${translateFeedingMethodOrType(f.method || f.type)}`.trim() || t("action.feeding"),
       detail,
       amount: f.amount || 0,
       type: f.type,
@@ -94,7 +118,7 @@ export function toDiaperTimeline(changes) {
 export function toSleepBlocks(sleepEntries) {
   return sleepEntries.map((s) => ({
     start: formatTime(s.start),
-    end: s.end ? formatTime(s.end) : "ongoing",
+    end: s.end ? formatTime(s.end) : t("time.ongoing"),
     duration: parseDuration(s.duration),
     nap: s.nap,
     entry: s,
@@ -110,11 +134,24 @@ export function toNoteTimeline(notes) {
   }));
 }
 
+const DOSAGE_UNIT_KEYS = {
+  mg: "medicationForm.dosageUnits.mg",
+  ml: "medicationForm.dosageUnits.ml",
+  tablets: "medicationForm.dosageUnits.tablets",
+  drops: "medicationForm.dosageUnits.drops",
+};
+
+export function translateDosageUnit(value) {
+  if (!value) return "";
+  const key = DOSAGE_UNIT_KEYS[value];
+  return key ? t(key) : value;
+}
+
 export function toMedicationTimeline(medications) {
   return medications.map((m) => ({
     time: formatTime(m.time),
     label: m.name,
-    detail: `${m.dosage ? `${m.dosage}${m.dosage_unit ? " " + m.dosage_unit : ""} · ` : ""}${timeAgo(m.time)}`,
+    detail: `${m.dosage ? `${m.dosage}${m.dosage_unit ? " " + translateDosageUnit(m.dosage_unit) : ""} · ` : ""}${timeAgo(m.time)}`,
     entry: m,
   }));
 }
@@ -147,14 +184,14 @@ export function formatElapsedHM(ms) {
 export function formatDueLabel(dueAt) {
   const now = new Date();
   if (now.getTime() > dueAt.getTime()) {
-    return `Overdue by ${formatElapsedHM(now.getTime() - dueAt.getTime())}`;
+    return t("notes.dueOverdueBy", { elapsed: formatElapsedHM(now.getTime() - dueAt.getTime()) });
   }
   const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const dayDiff = Math.round((startOfDay(dueAt) - startOfDay(now)) / 86400000);
-  const time = dueAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  if (dayDiff === 0) return `Next: Today at ${time}`;
-  if (dayDiff === 1) return `Next: Tomorrow at ${time}`;
-  return `Next: ${dueAt.toLocaleDateString([], { month: "short", day: "numeric" })} at ${time}`;
+  const time = dueAt.toLocaleTimeString(getLocale(), { hour: "2-digit", minute: "2-digit" });
+  if (dayDiff === 0) return t("notes.dueNextToday", { time });
+  if (dayDiff === 1) return t("notes.dueNextTomorrow", { time });
+  return t("notes.dueNextOn", { date: dueAt.toLocaleDateString(getLocale(), { month: "short", day: "numeric" }), time });
 }
 
 export function getMedicationStatus(medications) {
@@ -179,7 +216,7 @@ export function toGrowthSeries(entries, valueKey) {
     .sort((a, b) => new Date(a.date) - new Date(b.date))
     .map((e) => ({
       timestamp: new Date(e.date).getTime(),
-      date: new Date(e.date).toLocaleDateString([], {
+      date: new Date(e.date).toLocaleDateString(getLocale(), {
         month: "short",
         day: "numeric",
       }),
@@ -189,14 +226,14 @@ export function toGrowthSeries(entries, valueKey) {
 }
 
 export function formatGrowthTick(timestamp) {
-  return new Date(timestamp).toLocaleDateString([], {
+  return new Date(timestamp).toLocaleDateString(getLocale(), {
     month: "short",
     day: "numeric",
   });
 }
 
 function getLast7Days() {
-  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const dayNames = t("time.dayNames");
   const result = [];
   const now = new Date();
   for (let i = 6; i >= 0; i--) {
@@ -265,7 +302,7 @@ function getLastNDays(n) {
   for (let i = n - 1; i >= 0; i--) {
     const d = new Date(now);
     d.setDate(d.getDate() - i);
-    const month = d.toLocaleDateString([], { month: "short", day: "numeric" });
+    const month = d.toLocaleDateString(getLocale(), { month: "short", day: "numeric" });
     result.push({
       label: month,
       dateStr: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
@@ -323,7 +360,7 @@ export function getEntriesForDate(entries, dateLabel, dateKey = "start") {
   const targetDate = dateLabel; // Already in format like "Jan 15"
   return entries.filter((e) => {
     const entryDate = new Date(e[dateKey] || e.time || e.date);
-    const formattedDate = entryDate.toLocaleDateString([], {
+    const formattedDate = entryDate.toLocaleDateString(getLocale(), {
       month: "short",
       day: "numeric",
     });
@@ -367,9 +404,9 @@ export function buildDailyReport(feedings, changes, sleepEntries, numDays = 7, t
     const key = entryDateStr(s.start);
     if (key in rows) rows[key].sleepHours += parseDuration(s.duration);
   });
-  tummyTimes.forEach((t) => {
-    const key = entryDateStr(t.start);
-    if (key in rows) rows[key].tummyMinutes += parseDuration(t.duration) * 60;
+  tummyTimes.forEach((tt) => {
+    const key = entryDateStr(tt.start);
+    if (key in rows) rows[key].tummyMinutes += parseDuration(tt.duration) * 60;
   });
   return days.map((d) => ({
     ...rows[d.dateStr],

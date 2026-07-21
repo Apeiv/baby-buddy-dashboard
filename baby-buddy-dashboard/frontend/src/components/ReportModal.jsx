@@ -7,6 +7,7 @@ import { downloadFile } from "../utils/download";
 import { colors } from "../utils/colors";
 import { getMockData } from "../utils/mockData";
 import ReportRangeBar from "./ReportRangeBar";
+import { useTranslation } from "../locales";
 
 function toLocalISODate(date) {
   const pad = (n) => String(n).padStart(2, "0");
@@ -14,6 +15,7 @@ function toLocalISODate(date) {
 }
 
 export default function ReportModal({ childId, demoMode, onClose }) {
+  const t = useTranslation();
   const units = useUnits();
   const [rangeDays, setRangeDays] = useState(7);
   const [loading, setLoading] = useState(!demoMode);
@@ -99,9 +101,10 @@ export default function ReportModal({ childId, demoMode, onClose }) {
   };
 
   const cellStyle = { padding: "8px 6px", textAlign: "right", whiteSpace: "nowrap" };
+  const columns = [units.volume, t("report.columnFeedings"), t("report.columnWet"), t("report.columnSolid"), t("report.columnBoth"), t("report.columnSleepH"), t("report.columnTummyMin")];
 
   return (
-    <Modal title="Daily Report — Growth" onClose={onClose} maxWidth={720}>
+    <Modal title={t("report.growthTitle")} onClose={onClose} maxWidth={720}>
       <ReportRangeBar
         rangeDays={rangeDays}
         setRangeDays={setRangeDays}
@@ -111,19 +114,19 @@ export default function ReportModal({ childId, demoMode, onClose }) {
 
       {loading ? (
         <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 40 }}>
-          Loading...
+          {t("common.loading")}
         </div>
       ) : error ? (
         <div style={{ color: "#EF4444", fontSize: 13, textAlign: "center", padding: 40 }}>
-          Failed to load report: {error}
+          {t("report.failedToLoadReport", { error })}
         </div>
       ) : (
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
             <thead>
               <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                <th style={{ textAlign: "left", padding: "8px 6px", color: "var(--text-dim)", fontWeight: 500 }}>Date</th>
-                {[`${units.volume}`, "Feedings", "Wet", "Solid", "Both", "Sleep (h)", "Tummy (min)"].map((h) => (
+                <th style={{ textAlign: "left", padding: "8px 6px", color: "var(--text-dim)", fontWeight: 500 }}>{t("report.columnDate")}</th>
+                {columns.map((h) => (
                   <th key={h} style={{ ...cellStyle, color: "var(--text-dim)", fontWeight: 500 }}>
                     {h}
                   </th>
@@ -146,7 +149,7 @@ export default function ReportModal({ childId, demoMode, onClose }) {
             </tbody>
             <tfoot>
               <tr>
-                <td style={{ padding: "10px 6px", color: "var(--text)", fontWeight: 700 }}>Total</td>
+                <td style={{ padding: "10px 6px", color: "var(--text)", fontWeight: 700 }}>{t("report.columnTotal")}</td>
                 <td style={{ ...cellStyle, color: "var(--text)", fontWeight: 700 }}>{totals.amount}</td>
                 <td style={{ ...cellStyle, color: "var(--text)", fontWeight: 700 }}>{totals.feedCount}</td>
                 <td style={{ ...cellStyle, color: "var(--text)", fontWeight: 700 }}>{totals.wet}</td>

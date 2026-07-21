@@ -5,6 +5,7 @@ import DeleteButton from "../DeleteButton";
 import { colors } from "../../utils/colors";
 import { useUnits } from "../../utils/units";
 import { logError } from "../../utils/errorLog";
+import { useTranslation } from "../../locales";
 
 function toLocalDate(date) {
   const d = new Date(date);
@@ -13,6 +14,7 @@ function toLocalDate(date) {
 }
 
 export default function WeightForm({ childId, entry, onDone, onClose }) {
+  const t = useTranslation();
   const units = useUnits();
   const isEdit = !!entry;
   const [weight, setWeight] = useState(entry?.weight ? String(entry.weight) : "");
@@ -39,7 +41,7 @@ export default function WeightForm({ childId, entry, onDone, onClose }) {
       onDone();
     } catch (err) {
       setSaving(false);
-      setError("Save failed - check your connection and try again.");
+      setError(t("common.saveFailed"));
       logError(isEdit ? "Update Weight" : "Save Weight", err.message);
     }
   };
@@ -50,15 +52,15 @@ export default function WeightForm({ childId, entry, onDone, onClose }) {
       await api.deleteWeight(entry.id);
       onDone();
     } catch (err) {
-      setError("Delete failed - check your connection and try again.");
+      setError(t("common.deleteFailed"));
       logError("Delete Weight", err.message);
     }
   };
 
   return (
-    <Modal title={isEdit ? "Edit Weight" : "Log Weight"} onClose={onClose}>
+    <Modal title={isEdit ? t("weightForm.editTitle") : t("weightForm.logTitle")} onClose={onClose}>
       <form onSubmit={handleSubmit}>
-        <FormField label={`Weight (${units.weight})`}>
+        <FormField label={t("weightForm.amount", { unit: units.weight })}>
           <FormInput
             type="number"
             value={weight}
@@ -71,7 +73,7 @@ export default function WeightForm({ childId, entry, onDone, onClose }) {
             required
           />
         </FormField>
-        <FormField label="Date">
+        <FormField label={t("common.date")}>
           <FormInput
             type="date"
             value={date}
@@ -82,7 +84,7 @@ export default function WeightForm({ childId, entry, onDone, onClose }) {
         <FormError message={error} />
         {isEdit && <DeleteButton onDelete={handleDelete} disabled={saving} />}
         <FormButton color={colors.growth} disabled={saving || !weight}>
-          {saving ? "Saving..." : isEdit ? "Update Weight" : "Save Weight"}
+          {saving ? t("common.saving") : isEdit ? t("weightForm.update") : t("weightForm.save")}
         </FormButton>
       </form>
     </Modal>

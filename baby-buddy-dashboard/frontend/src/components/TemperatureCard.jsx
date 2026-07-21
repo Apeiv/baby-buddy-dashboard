@@ -16,18 +16,20 @@ import { colors } from "../utils/colors";
 import { api } from "../api";
 import { useUnits } from "../utils/units";
 import { getMockData } from "../utils/mockData";
+import { useTranslation, getLocale } from "../locales";
 
 const RANGE_OPTIONS = [48, 72, 96];
 
 function formatTick(ts) {
-  return new Date(ts).toLocaleString([], { weekday: "short", hour: "2-digit" });
+  return new Date(ts).toLocaleString(getLocale(), { weekday: "short", hour: "2-digit" });
 }
 
 function formatFull(ts) {
-  return new Date(ts).toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" });
+  return new Date(ts).toLocaleString(getLocale(), { weekday: "short", hour: "2-digit", minute: "2-digit" });
 }
 
 export default function TemperatureCard({ childId, demoMode, onEditEntry }) {
+  const t = useTranslation();
   const units = useUnits();
   const [rangeHours, setRangeHours] = useState(72);
   const [loading, setLoading] = useState(!demoMode);
@@ -40,7 +42,7 @@ export default function TemperatureCard({ childId, demoMode, onEditEntry }) {
 
     if (demoMode) {
       const mock = getMockData(childId);
-      setEntries((mock.temperatures || []).filter((t) => new Date(t.time).getTime() >= cutoff));
+      setEntries((mock.temperatures || []).filter((entry) => new Date(entry.time).getTime() >= cutoff));
       setLoading(false);
       setError(null);
       return;
@@ -53,7 +55,7 @@ export default function TemperatureCard({ childId, demoMode, onEditEntry }) {
       .getTemperature({ child: childId, limit: 200, ordering: "-time" })
       .then((res) => {
         if (cancelled) return;
-        const results = (res.results || []).filter((t) => new Date(t.time).getTime() >= cutoff);
+        const results = (res.results || []).filter((entry) => new Date(entry.time).getTime() >= cutoff);
         setEntries(results);
       })
       .catch((err) => {
@@ -70,7 +72,7 @@ export default function TemperatureCard({ childId, demoMode, onEditEntry }) {
 
   const series = [...entries]
     .sort((a, b) => new Date(a.time) - new Date(b.time))
-    .map((t) => ({ timestamp: new Date(t.time).getTime(), temperature: parseFloat(t.temperature), entry: t }));
+    .map((entry) => ({ timestamp: new Date(entry.time).getTime(), temperature: parseFloat(entry.temperature), entry }));
 
   const latest = entries[0];
 
@@ -81,7 +83,7 @@ export default function TemperatureCard({ childId, demoMode, onEditEntry }) {
   };
 
   return (
-    <SectionCard title="Temperature" icon={<Icons.Temp />} color={colors.temp}>
+    <SectionCard title={t("temperature.title")} icon={<Icons.Temp />} color={colors.temp}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <div style={{ fontSize: 20, fontWeight: 700, color: "var(--text)" }}>
           {latest ? `${latest.temperature} ${units.temp}` : "—"}
@@ -111,11 +113,11 @@ export default function TemperatureCard({ childId, demoMode, onEditEntry }) {
 
       {loading ? (
         <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 30 }}>
-          Loading...
+          {t("common.loading")}
         </div>
       ) : error ? (
         <div style={{ color: "#EF4444", fontSize: 13, textAlign: "center", padding: 30 }}>
-          Failed to load: {error}
+          {t("common.failedToLoad", { error })}
         </div>
       ) : series.length >= 2 ? (
         <>
@@ -153,7 +155,7 @@ export default function TemperatureCard({ childId, demoMode, onEditEntry }) {
               value={selected.value}
               unit={units.temp}
               color={colors.temp}
-              actionLabel="Edit"
+              actionLabel={t("common.edit")}
               onViewEntries={() => {
                 if (selected.entry) onEditEntry?.("temp", selected.entry);
                 setSelected(null);
@@ -164,7 +166,7 @@ export default function TemperatureCard({ childId, demoMode, onEditEntry }) {
         </>
       ) : (
         <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 30 }}>
-          {series.length === 1 ? "Need at least 2 readings in this range to show a trend" : `No readings in the last ${rangeHours}h`}
+          {series.length === 1 ? t("temperature.needTwoReadings") : t("temperature.noReadingsInRange", { hours: rangeHours })}
         </div>
       )}
     </SectionCard>

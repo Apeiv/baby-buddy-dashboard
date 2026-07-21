@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import SettingsModal from "./SettingsModal";
 import { clearErrorLog, logError } from "../utils/errorLog";
+import { getLanguage, setLanguage } from "../locales";
 
 beforeEach(() => {
   clearErrorLog();
@@ -32,6 +33,28 @@ describe("SettingsModal connection status", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Refresh now" }));
     expect(onRefresh).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("SettingsModal language selector", () => {
+  afterEach(() => setLanguage("en"));
+
+  it("offers all three languages and switches the active one on click", () => {
+    render(<SettingsModal connected onRefresh={vi.fn()} onClose={vi.fn()} />);
+
+    expect(screen.getByRole("button", { name: "English" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Italiano" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Deutsch" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Italiano" }));
+    expect(getLanguage()).toBe("it");
+  });
+
+  it("re-renders its own text in the newly selected language", () => {
+    render(<SettingsModal connected onRefresh={vi.fn()} onClose={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Italiano" }));
+    expect(screen.getByText("Connesso")).toBeInTheDocument();
   });
 });
 

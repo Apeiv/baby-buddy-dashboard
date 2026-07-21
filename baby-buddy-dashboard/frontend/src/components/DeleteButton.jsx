@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useTranslation } from "../locales";
 
 export default function DeleteButton({ onDelete, disabled }) {
+  const t = useTranslation();
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -25,7 +27,7 @@ export default function DeleteButton({ onDelete, disabled }) {
           border: "1px solid #EF444430",
         }}
       >
-        <span style={{ fontSize: 12, color: "var(--text)" }}>Delete this entry?</span>
+        <span style={{ fontSize: 12, color: "var(--text)" }}>{t("common.deleteThisEntry")}</span>
         <button
           type="button"
           onClick={handleConfirm}
@@ -42,7 +44,7 @@ export default function DeleteButton({ onDelete, disabled }) {
             fontFamily: "inherit",
           }}
         >
-          {deleting ? "Deleting..." : "Delete"}
+          {deleting ? t("common.deleting") : t("common.delete")}
         </button>
         <button
           type="button"
@@ -60,7 +62,7 @@ export default function DeleteButton({ onDelete, disabled }) {
             fontFamily: "inherit",
           }}
         >
-          Cancel
+          {t("common.cancel")}
         </button>
       </div>
     );
@@ -87,7 +89,7 @@ export default function DeleteButton({ onDelete, disabled }) {
         textAlign: "center",
       }}
     >
-      Delete
+      {t("common.delete")}
     </button>
   );
 }

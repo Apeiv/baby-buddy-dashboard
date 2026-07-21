@@ -23,8 +23,10 @@ import { useUnits } from "../utils/units";
 import { toGrowthSeries, formatGrowthTick, dailyFeedingTotals, dailySleepTotals, dailyDiaperTotals, getEntriesForDate, averageFeedingGapMs, formatElapsedHM } from "../utils/formatters";
 import { clickableProps } from "../utils/a11y";
 import { useFeedingChartMetrics } from "../hooks/useFeedingChartMetrics";
+import { useTranslation, getLocale } from "../locales";
 
 export default function GrowthTab({ childId, demoMode, weights, heights, headCircumferences, bmis, monthlyFeedings, monthlySleep, monthlyChanges, onEditEntry }) {
+  const t = useTranslation();
   const units = useUnits();
   const [dayModal, setDayModal] = useState(null);
   const [selectedBar, setSelectedBar] = useState(null);
@@ -40,8 +42,8 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
   const diaperSeries = dailyDiaperTotals(monthlyChanges || []);
 
   const FEEDING_METRIC_OPTIONS = [
-    { key: "amount", label: `Amount (${units.volume})` },
-    { key: "count", label: "Feedings" },
+    { key: "amount", label: t("feedingForm.amount", { unit: units.volume }) },
+    { key: "count", label: t("overview.feedings") },
   ];
 
   const latestWeight = weights[0];
@@ -126,7 +128,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
                 <Icons.Weight />
               </div>
               <span style={{ fontSize: 12, color: "var(--text-dim)", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.03em" }}>
-                Weight
+                {t("growth.weight")}
               </span>
             </div>
             <div style={{ fontSize: 28, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em" }}>
@@ -134,7 +136,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
             </div>
             {latestWeight && (
               <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
-                {new Date(latestWeight.date).toLocaleDateString()}
+                {new Date(latestWeight.date).toLocaleDateString(getLocale())}
               </div>
             )}
           </div>
@@ -168,7 +170,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
                 <Icons.Ruler />
               </div>
               <span style={{ fontSize: 12, color: "var(--text-dim)", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.03em" }}>
-                Height
+                {t("growth.height")}
               </span>
             </div>
             <div style={{ fontSize: 28, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em" }}>
@@ -176,7 +178,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
             </div>
             {latestHeight && (
               <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
-                {new Date(latestHeight.date).toLocaleDateString()}
+                {new Date(latestHeight.date).toLocaleDateString(getLocale())}
               </div>
             )}
           </div>
@@ -210,7 +212,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
                 <Icons.HeadCircle />
               </div>
               <span style={{ fontSize: 12, color: "var(--text-dim)", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.03em" }}>
-                Head Circ.
+                {t("growth.headCircumference")}
               </span>
             </div>
             <div style={{ fontSize: 28, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em" }}>
@@ -218,7 +220,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
             </div>
             {latestHeadCircumference && (
               <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
-                {new Date(latestHeadCircumference.date).toLocaleDateString()}
+                {new Date(latestHeadCircumference.date).toLocaleDateString(getLocale())}
               </div>
             )}
           </div>
@@ -252,7 +254,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
                 <Icons.Gauge />
               </div>
               <span style={{ fontSize: 12, color: "var(--text-dim)", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.03em" }}>
-                BMI
+                {t("growth.bmi")}
               </span>
             </div>
             <div style={{ fontSize: 28, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em" }}>
@@ -260,7 +262,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
             </div>
             {latestBmi && (
               <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
-                {new Date(latestBmi.date).toLocaleDateString()}
+                {new Date(latestBmi.date).toLocaleDateString(getLocale())}
               </div>
             )}
           </div>
@@ -294,18 +296,18 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
                 <Icons.Bottle />
               </div>
               <span style={{ fontSize: 12, color: "var(--text-dim)", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.03em" }}>
-                Avg Feeding
+                {t("growth.avgFeeding")}
               </span>
             </div>
             <div style={{ fontSize: 28, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em" }}>
               {avgFeeding ? `${avgFeeding} ${units.volume}` : "—"}
             </div>
             <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
-              {avgFeedCount ? `${avgFeedCount} feedings/day` : "per day"} (30d)
+              {avgFeedCount ? t("growth.feedingsPerDay30d", { count: avgFeedCount }) : t("growth.perDay30d")}
             </div>
             {avgFeedingGapMs && (
               <div style={{ fontSize: 12, color: "var(--text-dim)", marginTop: 2 }}>
-                ~{formatElapsedHM(avgFeedingGapMs)} avg gap
+                {t("growth.avgGap", { gap: formatElapsedHM(avgFeedingGapMs) })}
               </div>
             )}
           </div>
@@ -339,14 +341,14 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
                 <Icons.Droplet />
               </div>
               <span style={{ fontSize: 12, color: "var(--text-dim)", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.03em" }}>
-                Avg Diapers
+                {t("growth.avgDiapers")}
               </span>
             </div>
             <div style={{ fontSize: 28, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em" }}>
               {avgDiapers || "—"}
             </div>
             <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
-              per day (30d)
+              {t("growth.perDay30d")}
             </div>
           </div>
         </div>
@@ -379,14 +381,14 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
                 <Icons.Moon />
               </div>
               <span style={{ fontSize: 12, color: "var(--text-dim)", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.03em" }}>
-                Avg Sleep
+                {t("growth.avgSleep")}
               </span>
             </div>
             <div style={{ fontSize: 28, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em" }}>
               {avgSleep ? `${avgSleep} h` : "—"}
             </div>
             <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
-              per day (30d)
+              {t("growth.perDay30d")}
             </div>
           </div>
         </div>
@@ -397,7 +399,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
         {/* Daily Feeding Totals */}
         <div className="fade-in fade-in-5">
           <SectionCard
-            title="Daily Feeding (30d)"
+            title={t("growth.dailyFeeding30d")}
             icon={<Icons.Bottle />}
             color={colors.feeding}
             actions={
@@ -455,7 +457,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
                     value={selectedBar.value}
                     unit={units.volume}
                     value2={selectedBar.value2}
-                    unit2="feedings"
+                    unit2={t("chartMetric.count")}
                     color={colors.feeding}
                     onViewEntries={() => openDayModal(selectedBar.label, "feeding")}
                     onDismiss={() => setSelectedBar(null)}
@@ -464,7 +466,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
               </>
             ) : (
               <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 40 }}>
-                No feeding data recorded yet
+                {t("growth.noFeedingData")}
               </div>
             )}
             <button
@@ -484,14 +486,14 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
                 textAlign: "center",
               }}
             >
-              Report →
+              {t("common.report")}
             </button>
           </SectionCard>
         </div>
 
         {/* Daily Sleep Totals */}
         <div className="fade-in fade-in-6">
-          <SectionCard title="Daily Sleep (30d)" icon={<Icons.Moon />} color={colors.sleep}>
+          <SectionCard title={t("growth.dailySleep30d")} icon={<Icons.Moon />} color={colors.sleep}>
             {sleepSeries.some((d) => d.hours > 0) ? (
               <>
                 <div style={{ height: 200 }}>
@@ -527,7 +529,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
               </>
             ) : (
               <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 40 }}>
-                No sleep data recorded yet
+                {t("growth.noSleepData")}
               </div>
             )}
           </SectionCard>
@@ -535,7 +537,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
 
         {/* Weight Chart */}
         <div className="fade-in fade-in-7">
-          <SectionCard title="Weight Trend" icon={<Icons.Weight />} color={colors.growth}>
+          <SectionCard title={t("growth.weightTrend")} icon={<Icons.Weight />} color={colors.growth}>
             {weightSeries.length >= 2 ? (
               <>
                 <div style={{ height: 200 }}>
@@ -562,7 +564,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
                     value={selectedBar.value}
                     unit={units.weight}
                     color={colors.growth}
-                    actionLabel="Edit"
+                    actionLabel={t("common.edit")}
                     onViewEntries={() => {
                       if (selectedBar.entry) onEditEntry?.("weight", selectedBar.entry);
                       setSelectedBar(null);
@@ -573,7 +575,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
               </>
             ) : (
               <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 40 }}>
-                {weightSeries.length === 1 ? "Need at least 2 measurements to show trend" : "No weight data recorded yet"}
+                {weightSeries.length === 1 ? t("growth.needTwoMeasurements") : t("growth.noWeightData")}
               </div>
             )}
           </SectionCard>
@@ -581,7 +583,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
 
         {/* Height Chart */}
         <div className="fade-in fade-in-8">
-          <SectionCard title="Height Trend" icon={<Icons.Ruler />} color={colors.height}>
+          <SectionCard title={t("growth.heightTrend")} icon={<Icons.Ruler />} color={colors.height}>
             {heightSeries.length >= 2 ? (
               <>
                 <div style={{ height: 200 }}>
@@ -608,7 +610,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
                     value={selectedBar.value}
                     unit={units.length}
                     color={colors.height}
-                    actionLabel="Edit"
+                    actionLabel={t("common.edit")}
                     onViewEntries={() => {
                       if (selectedBar.entry) onEditEntry?.("height", selectedBar.entry);
                       setSelectedBar(null);
@@ -619,7 +621,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
               </>
             ) : (
               <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 40 }}>
-                {heightSeries.length === 1 ? "Need at least 2 measurements to show trend" : "No height data recorded yet"}
+                {heightSeries.length === 1 ? t("growth.needTwoMeasurements") : t("growth.noHeightData")}
               </div>
             )}
           </SectionCard>
@@ -627,7 +629,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
 
         {/* Head Circumference Chart */}
         <div className="fade-in fade-in-8">
-          <SectionCard title="Head Circumference Trend" icon={<Icons.HeadCircle />} color={colors.headCircumference}>
+          <SectionCard title={t("growth.headCircumferenceTrend")} icon={<Icons.HeadCircle />} color={colors.headCircumference}>
             {headCircumferenceSeries.length >= 2 ? (
               <>
                 <div style={{ height: 200 }}>
@@ -654,7 +656,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
                     value={selectedBar.value}
                     unit={units.length}
                     color={colors.headCircumference}
-                    actionLabel="Edit"
+                    actionLabel={t("common.edit")}
                     onViewEntries={() => {
                       if (selectedBar.entry) onEditEntry?.("headCircumference", selectedBar.entry);
                       setSelectedBar(null);
@@ -665,7 +667,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
               </>
             ) : (
               <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 40 }}>
-                {headCircumferenceSeries.length === 1 ? "Need at least 2 measurements to show trend" : "No head circumference data recorded yet"}
+                {headCircumferenceSeries.length === 1 ? t("growth.needTwoMeasurements") : t("growth.noHeadCircumferenceData")}
               </div>
             )}
           </SectionCard>
@@ -673,7 +675,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
 
         {/* BMI Chart */}
         <div className="fade-in fade-in-8">
-          <SectionCard title="BMI Trend" icon={<Icons.Gauge />} color={colors.bmi}>
+          <SectionCard title={t("growth.bmiTrend")} icon={<Icons.Gauge />} color={colors.bmi}>
             {bmiSeries.length >= 2 ? (
               <>
                 <div style={{ height: 200 }}>
@@ -700,7 +702,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
                     value={selectedBar.value}
                     unit=""
                     color={colors.bmi}
-                    actionLabel="Edit"
+                    actionLabel={t("common.edit")}
                     onViewEntries={() => {
                       if (selectedBar.entry) onEditEntry?.("bmi", selectedBar.entry);
                       setSelectedBar(null);
@@ -711,7 +713,7 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
               </>
             ) : (
               <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 40 }}>
-                {bmiSeries.length === 1 ? "Need at least 2 measurements to show trend" : "No BMI data recorded yet"}
+                {bmiSeries.length === 1 ? t("growth.needTwoMeasurements") : t("growth.noBmiData")}
               </div>
             )}
           </SectionCard>

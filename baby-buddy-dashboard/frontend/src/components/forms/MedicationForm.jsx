@@ -4,14 +4,7 @@ import Modal, { FormField, FormSelect, FormInput, FormButton, FormError } from "
 import DeleteButton from "../DeleteButton";
 import { colors } from "../../utils/colors";
 import { logError } from "../../utils/errorLog";
-
-const DOSAGE_UNITS = [
-  { value: "", label: "Not specified" },
-  { value: "mg", label: "MG" },
-  { value: "ml", label: "ML" },
-  { value: "tablets", label: "Tablets" },
-  { value: "drops", label: "Drops" },
-];
+import { useTranslation } from "../../locales";
 
 function toLocalDatetime(date) {
   const pad = (n) => String(n).padStart(2, "0");
@@ -28,7 +21,17 @@ function parseNextDoseHours(interval) {
 }
 
 export default function MedicationForm({ childId, entry, onDone, onClose }) {
+  const t = useTranslation();
   const isEdit = !!entry;
+
+  const DOSAGE_UNITS = [
+    { value: "", label: t("form.notSpecified") },
+    { value: "mg", label: t("medicationForm.dosageUnits.mg") },
+    { value: "ml", label: t("medicationForm.dosageUnits.ml") },
+    { value: "tablets", label: t("medicationForm.dosageUnits.tablets") },
+    { value: "drops", label: t("medicationForm.dosageUnits.drops") },
+  ];
+
   const [name, setName] = useState(entry?.name || "");
   const [dosage, setDosage] = useState(entry?.dosage != null ? String(entry.dosage) : "");
   const [dosageUnit, setDosageUnit] = useState(entry?.dosage_unit || "");
@@ -58,7 +61,7 @@ export default function MedicationForm({ childId, entry, onDone, onClose }) {
       onDone();
     } catch (err) {
       setSaving(false);
-      setError("Save failed - check your connection and try again.");
+      setError(t("common.saveFailed"));
       logError(isEdit ? "Update Medication" : "Save Medication", err.message);
     }
   };
@@ -69,38 +72,38 @@ export default function MedicationForm({ childId, entry, onDone, onClose }) {
       await api.deleteMedication(entry.id);
       onDone();
     } catch (err) {
-      setError("Delete failed - check your connection and try again.");
+      setError(t("common.deleteFailed"));
       logError("Delete Medication", err.message);
     }
   };
 
   return (
-    <Modal title={isEdit ? "Edit Medication" : "Log Medication"} onClose={onClose}>
+    <Modal title={isEdit ? t("medicationForm.editTitle") : t("medicationForm.logTitle")} onClose={onClose}>
       <form onSubmit={handleSubmit}>
-        <FormField label="Medication">
+        <FormField label={t("form.medication")}>
           <FormInput
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g., Paracetamol"
+            placeholder={t("form.medicationPlaceholder")}
             autoFocus
             required
           />
         </FormField>
-        <FormField label="Dosage">
+        <FormField label={t("form.dosage")}>
           <FormInput
             type="number"
             value={dosage}
             onChange={(e) => setDosage(e.target.value)}
-            placeholder="Optional"
+            placeholder={t("common.optional")}
             min="0"
             step="0.1"
           />
         </FormField>
-        <FormField label="Dosage Unit">
+        <FormField label={t("form.dosageUnit")}>
           <FormSelect options={DOSAGE_UNITS} value={dosageUnit} onChange={(e) => setDosageUnit(e.target.value)} />
         </FormField>
-        <FormField label="Time Given">
+        <FormField label={t("form.timeGiven")}>
           <FormInput
             type="datetime-local"
             value={time}
@@ -108,28 +111,28 @@ export default function MedicationForm({ childId, entry, onDone, onClose }) {
             required
           />
         </FormField>
-        <FormField label="Next Dose In (hours)">
+        <FormField label={t("form.nextDoseInHours")}>
           <FormInput
             type="number"
             value={nextDoseHours}
             onChange={(e) => setNextDoseHours(e.target.value)}
-            placeholder="Optional, e.g. 8"
+            placeholder={t("form.nextDosePlaceholder")}
             min="0"
             step="0.5"
           />
         </FormField>
-        <FormField label="Notes">
+        <FormField label={t("common.notes")}>
           <FormInput
             type="text"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Optional"
+            placeholder={t("common.optional")}
           />
         </FormField>
         <FormError message={error} />
         {isEdit && <DeleteButton onDelete={handleDelete} disabled={saving} />}
         <FormButton color={colors.medication} disabled={saving || !name.trim()}>
-          {saving ? "Saving..." : isEdit ? "Update Medication" : "Save Medication"}
+          {saving ? t("common.saving") : isEdit ? t("medicationForm.update") : t("medicationForm.save")}
         </FormButton>
       </form>
     </Modal>

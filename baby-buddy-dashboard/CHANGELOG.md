@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.5.0
+
+- Added full translation support: English, Italian, and German. A
+  language selector now lives in the Settings panel; the choice is
+  saved on the device (not a shared add-on setting), defaults to
+  English, and falls back to English for any string a language is
+  missing. Covers every screen - tabs, all 11 entry forms, reports,
+  the medication log, chart labels, and relative-time text ("43m
+  ago", "Overdue by 3h 20m", age display) - plus locale-aware date
+  and number formatting (e.g. Italian "22 giu" / German "22. Jun"
+  instead of always English month names). Built as a `locales/`
+  folder with one file per language, so anyone can contribute another
+  language later with just a new file, the same approach used by an
+  existing community PR for German that this implementation is
+  compatible with in spirit (dependency-free, English-fallback `t()`
+  helper).
+
 ## 1.4.2
 
 - Added an "avg gap" line to the Growth tab's Avg Feeding card (e.g.

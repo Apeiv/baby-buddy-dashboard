@@ -14,7 +14,9 @@ import {
   buildDailyMeasurementsReport,
   toFeedingTimeline,
   averageFeedingGapMs,
+  translateDosageUnit,
 } from "./formatters";
+import { setLanguage } from "../locales";
 
 const NOW = new Date("2026-07-20T12:00:00.000Z");
 
@@ -233,6 +235,31 @@ describe("toFeedingTimeline", () => {
     expect(timeline[1].detail).toBe("43m gap");
     // 130m ago -> 73m ago is a 57 minute gap
     expect(timeline[2].detail).toBe("57m gap");
+  });
+
+  it("translates the feeding method/type shown in the label, not just the raw API value", () => {
+    const [entry] = toFeedingTimeline([{ start: NOW.toISOString(), amount: 120, method: "bottle" }]);
+    expect(entry.label).toBe("120 mL Bottle");
+
+    setLanguage("it");
+    const [itEntry] = toFeedingTimeline([{ start: NOW.toISOString(), amount: 120, method: "bottle" }]);
+    expect(itEntry.label).toBe("120 mL Biberon");
+    setLanguage("en");
+  });
+});
+
+describe("translateDosageUnit", () => {
+  afterEach(() => setLanguage("en"));
+
+  it("translates a known Baby Buddy dosage unit", () => {
+    expect(translateDosageUnit("drops")).toBe("Drops");
+    setLanguage("it");
+    expect(translateDosageUnit("drops")).toBe("Gocce");
+  });
+
+  it("passes through an unrecognized or empty value unchanged", () => {
+    expect(translateDosageUnit("")).toBe("");
+    expect(translateDosageUnit("teaspoons")).toBe("teaspoons");
   });
 });
 

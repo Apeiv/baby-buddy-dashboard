@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Icons } from "./Icons";
+import { useTranslation } from "../locales";
 
 export default function ChartSettingsMenu({ options, value, onChange, color }) {
+  const t = useTranslation();
   const [open, setOpen] = useState(false);
 
   const toggle = (key) => {
@@ -14,8 +16,8 @@ export default function ChartSettingsMenu({ options, value, onChange, color }) {
     <div style={{ position: "relative" }}>
       <button
         onClick={() => setOpen((o) => !o)}
-        title="Chart settings"
-        aria-label="Chart settings"
+        title={t("common.chartSettings")}
+        aria-label={t("common.chartSettings")}
         aria-expanded={open}
         style={{
           width: 26,
@@ -60,7 +62,7 @@ export default function ChartSettingsMenu({ options, value, onChange, color }) {
                 marginBottom: 6,
               }}
             >
-              Show on chart
+              {t("common.showOnChart")}
             </div>
             {options.map((opt) => (
               <label

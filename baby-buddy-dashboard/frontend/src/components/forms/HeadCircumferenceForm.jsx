@@ -5,6 +5,7 @@ import DeleteButton from "../DeleteButton";
 import { colors } from "../../utils/colors";
 import { useUnits } from "../../utils/units";
 import { logError } from "../../utils/errorLog";
+import { useTranslation } from "../../locales";
 
 function toLocalDate(date) {
   const d = new Date(date);
@@ -13,6 +14,7 @@ function toLocalDate(date) {
 }
 
 export default function HeadCircumferenceForm({ childId, entry, onDone, onClose }) {
+  const t = useTranslation();
   const units = useUnits();
   const isEdit = !!entry;
   const [headCircumference, setHeadCircumference] = useState(
@@ -41,7 +43,7 @@ export default function HeadCircumferenceForm({ childId, entry, onDone, onClose 
       onDone();
     } catch (err) {
       setSaving(false);
-      setError("Save failed - check your connection and try again.");
+      setError(t("common.saveFailed"));
       logError(isEdit ? "Update Head Circumference" : "Save Head Circumference", err.message);
     }
   };
@@ -52,15 +54,15 @@ export default function HeadCircumferenceForm({ childId, entry, onDone, onClose 
       await api.deleteHeadCircumference(entry.id);
       onDone();
     } catch (err) {
-      setError("Delete failed - check your connection and try again.");
+      setError(t("common.deleteFailed"));
       logError("Delete Head Circumference", err.message);
     }
   };
 
   return (
-    <Modal title={isEdit ? "Edit Head Circumference" : "Log Head Circumference"} onClose={onClose}>
+    <Modal title={isEdit ? t("headCircumferenceForm.editTitle") : t("headCircumferenceForm.logTitle")} onClose={onClose}>
       <form onSubmit={handleSubmit}>
-        <FormField label={`Head Circumference (${units.length})`}>
+        <FormField label={t("headCircumferenceForm.amount", { unit: units.length })}>
           <FormInput
             type="number"
             value={headCircumference}
@@ -73,7 +75,7 @@ export default function HeadCircumferenceForm({ childId, entry, onDone, onClose 
             required
           />
         </FormField>
-        <FormField label="Date">
+        <FormField label={t("common.date")}>
           <FormInput
             type="date"
             value={date}
@@ -84,7 +86,7 @@ export default function HeadCircumferenceForm({ childId, entry, onDone, onClose 
         <FormError message={error} />
         {isEdit && <DeleteButton onDelete={handleDelete} disabled={saving} />}
         <FormButton color={colors.headCircumference} disabled={saving || !headCircumference}>
-          {saving ? "Saving..." : isEdit ? "Update Head Circumference" : "Save Head Circumference"}
+          {saving ? t("common.saving") : isEdit ? t("headCircumferenceForm.update") : t("headCircumferenceForm.save")}
         </FormButton>
       </form>
     </Modal>

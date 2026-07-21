@@ -3,9 +3,10 @@ import Modal from "./Modal";
 import { Icons } from "./Icons";
 import { subscribeErrorLog, getErrorLog, clearErrorLog } from "../utils/errorLog";
 import { downloadFile } from "../utils/download";
+import { useTranslation, getLocale, getLanguage, setLanguage, SUPPORTED_LANGUAGES } from "../locales";
 
 function formatTime(iso) {
-  return new Date(iso).toLocaleString([], {
+  return new Date(iso).toLocaleString(getLocale(), {
     month: "short",
     day: "numeric",
     hour: "2-digit",
@@ -14,7 +15,9 @@ function formatTime(iso) {
 }
 
 export default function SettingsModal({ connected, lastSync, errorMessage, onRefresh, onClose }) {
+  const t = useTranslation();
   const log = useSyncExternalStore(subscribeErrorLog, getErrorLog);
+  const language = getLanguage();
 
   const handleExport = () => {
     const lines = log.map((e) => `${e.time}\t${e.action}\t${e.message}`);
@@ -26,7 +29,7 @@ export default function SettingsModal({ connected, lastSync, errorMessage, onRef
   };
 
   return (
-    <Modal title="Settings" onClose={onClose}>
+    <Modal title={t("settings.title")} onClose={onClose}>
       <div
         style={{
           display: "flex",
@@ -50,12 +53,12 @@ export default function SettingsModal({ connected, lastSync, errorMessage, onRef
               }}
             />
             <span style={{ fontSize: 13, fontWeight: 700, color: connected ? "#22C55E" : "#EF4444" }}>
-              {connected ? "Connected" : "Connection error"}
+              {connected ? t("settings.connected") : t("settings.connectionError")}
             </span>
           </div>
           {connected && lastSync && (
             <div style={{ fontSize: 11, color: "var(--text-dim)", marginTop: 4, fontFamily: "var(--mono)" }}>
-              Last sync {lastSync.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              {t("settings.lastSync", { time: lastSync.toLocaleTimeString(getLocale(), { hour: "2-digit", minute: "2-digit" }) })}
             </div>
           )}
           {!connected && errorMessage && (
@@ -64,8 +67,8 @@ export default function SettingsModal({ connected, lastSync, errorMessage, onRef
         </div>
         <button
           onClick={onRefresh}
-          title="Refresh now"
-          aria-label="Refresh now"
+          title={t("settings.refreshNow")}
+          aria-label={t("settings.refreshNow")}
           style={{
             width: 34,
             height: 34,
@@ -85,11 +88,37 @@ export default function SettingsModal({ connected, lastSync, errorMessage, onRef
       </div>
 
       <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: 10 }}>
-        Error Log
+        {t("settings.language")}
+      </div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+        {SUPPORTED_LANGUAGES.map((lang) => (
+          <button
+            key={lang.code}
+            onClick={() => setLanguage(lang.code)}
+            style={{
+              flex: 1,
+              padding: "8px 0",
+              borderRadius: 10,
+              border: language === lang.code ? "1px solid #F59E0B60" : "1px solid var(--border)",
+              background: language === lang.code ? "#F59E0B18" : "var(--bg)",
+              color: language === lang.code ? "#F59E0B" : "var(--text-muted)",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "inherit",
+            }}
+          >
+            {lang.label}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: 10 }}>
+        {t("settings.errorLog")}
       </div>
       {log.length === 0 ? (
         <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 20 }}>
-          No errors recorded. Save failures will show up here.
+          {t("settings.noErrorsRecorded")}
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 260, overflowY: "auto", marginBottom: 16 }}>
@@ -134,7 +163,7 @@ export default function SettingsModal({ connected, lastSync, errorMessage, onRef
             fontFamily: "inherit",
           }}
         >
-          <Icons.Download /> Export log
+          <Icons.Download /> {t("settings.exportLog")}
         </button>
         <button
           onClick={clearErrorLog}
@@ -156,7 +185,7 @@ export default function SettingsModal({ connected, lastSync, errorMessage, onRef
             fontFamily: "inherit",
           }}
         >
-          <Icons.Trash /> Clear
+          <Icons.Trash /> {t("settings.clear")}
         </button>
       </div>
     </Modal>

@@ -8,11 +8,13 @@ import { Icons } from "../components/Icons";
 import { colors } from "../utils/colors";
 import { toNoteTimeline, toMedicationTimeline, getMedicationStatus } from "../utils/formatters";
 import { clickableProps } from "../utils/a11y";
+import { useTranslation } from "../locales";
 
 const COLLAPSED_COUNT = 5;
 const COLLAPSED_COUNT_MEDS = 2;
 
 export default function NotesTab({ childId, demoMode, notes, medications, onEditEntry, onDataChanged }) {
+  const t = useTranslation();
   const [expanded, setExpanded] = useState({});
   const [showMedicationLog, setShowMedicationLog] = useState(false);
   const toggle = (key) => setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -25,7 +27,7 @@ export default function NotesTab({ childId, demoMode, notes, medications, onEdit
     <>
       <div className="card-grid">
       <div className="fade-in fade-in-1">
-        <SectionCard title="Medications" icon={<Icons.Pill />} color={colors.medication}>
+        <SectionCard title={t("notes.medications")} icon={<Icons.Pill />} color={colors.medication}>
           {medicationStatus.length > 0 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: medicationTimeline.length > 0 ? 14 : 0 }}>
               {medicationStatus.map((s) => (
@@ -48,14 +50,14 @@ export default function NotesTab({ childId, demoMode, notes, medications, onEdit
               ))}
               {medicationTimeline.length > COLLAPSED_COUNT_MEDS && (
                 <button className="expand-toggle" onClick={() => toggle("medications")}>
-                  {expanded.medications ? "Show less" : `Show ${medicationTimeline.length - COLLAPSED_COUNT_MEDS} more`}
+                  {expanded.medications ? t("common.showLess") : t("common.showMore", { count: medicationTimeline.length - COLLAPSED_COUNT_MEDS })}
                 </button>
               )}
             </div>
           ) : (
             medicationStatus.length === 0 && (
               <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 20 }}>
-                No medications logged
+                {t("notes.noMedicationsLogged")}
               </div>
             )
           )}
@@ -76,7 +78,7 @@ export default function NotesTab({ childId, demoMode, notes, medications, onEdit
               textAlign: "center",
             }}
           >
-            Log →
+            {t("common.log")}
           </button>
         </SectionCard>
       </div>
@@ -87,7 +89,7 @@ export default function NotesTab({ childId, demoMode, notes, medications, onEdit
       </div>
 
       <div className="fade-in fade-in-3" style={{ marginTop: 16 }}>
-        <SectionCard title="Notes" icon={<Icons.StickyNote />} color={colors.note}>
+        <SectionCard title={t("notes.notesTitle")} icon={<Icons.StickyNote />} color={colors.note}>
           {noteTimeline.length > 0 ? (
             <div style={{ display: "flex", flexDirection: "column" }}>
               {(expanded.notes ? noteTimeline : noteTimeline.slice(0, COLLAPSED_COUNT)).map((n, i, arr) => (
@@ -110,13 +112,13 @@ export default function NotesTab({ childId, demoMode, notes, medications, onEdit
                   className="expand-toggle"
                   onClick={() => toggle("notes")}
                 >
-                  {expanded.notes ? "Show less" : `Show ${noteTimeline.length - COLLAPSED_COUNT} more`}
+                  {expanded.notes ? t("common.showLess") : t("common.showMore", { count: noteTimeline.length - COLLAPSED_COUNT })}
                 </button>
               )}
             </div>
           ) : (
             <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 40 }}>
-              No notes yet — tap + to add one
+              {t("notes.noNotesYet")}
             </div>
           )}
         </SectionCard>

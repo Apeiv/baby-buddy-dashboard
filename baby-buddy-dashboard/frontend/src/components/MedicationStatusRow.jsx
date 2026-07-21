@@ -4,6 +4,7 @@ import { Icons } from "./Icons";
 import { colors } from "../utils/colors";
 import { formatDueLabel, formatDurationString } from "../utils/formatters";
 import { logError } from "../utils/errorLog";
+import { useTranslation } from "../locales";
 
 function toLocalDatetime(date) {
   const pad = (n) => String(n).padStart(2, "0");
@@ -11,6 +12,7 @@ function toLocalDatetime(date) {
 }
 
 export default function MedicationStatusRow({ status, childId, onUpdated }) {
+  const t = useTranslation();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [editing, setEditing] = useState(false);
@@ -31,7 +33,7 @@ export default function MedicationStatusRow({ status, childId, onUpdated }) {
       await api.createMedication(data);
       await onUpdated?.();
     } catch (err) {
-      setError("Failed to log dose");
+      setError(t("notes.failedToLogDose"));
       logError("Mark Medication Taken", err.message);
     }
     setSaving(false);
@@ -43,7 +45,7 @@ export default function MedicationStatusRow({ status, childId, onUpdated }) {
     const lastDoseTime = new Date(status.entry.time);
     const hours = (target.getTime() - lastDoseTime.getTime()) / 3600000;
     if (hours <= 0) {
-      setError("Next dose must be after the last dose time");
+      setError(t("notes.nextDoseMustBeAfterLastDose"));
       return;
     }
     setSaving(true);
@@ -53,7 +55,7 @@ export default function MedicationStatusRow({ status, childId, onUpdated }) {
       setEditing(false);
       await onUpdated?.();
     } catch (err) {
-      setError("Failed to update next dose");
+      setError(t("notes.failedToUpdateNextDose"));
       logError("Update Next Dose", err.message);
     }
     setSaving(false);
@@ -73,9 +75,9 @@ export default function MedicationStatusRow({ status, childId, onUpdated }) {
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <button
             onClick={() => setEditing((e) => !e)}
-            title="Set next dose time"
+            title={t("notes.setNextDoseTime")}
             style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", padding: 2, display: "flex" }}
-            aria-label="Set next dose time"
+            aria-label={t("notes.setNextDoseTime")}
           >
             <Icons.Clock />
           </button>
@@ -98,7 +100,7 @@ export default function MedicationStatusRow({ status, childId, onUpdated }) {
               fontFamily: "inherit",
             }}
           >
-            {saving ? "Saving…" : "Mark as taken"}
+            {saving ? t("notes.savingEllipsis") : t("notes.markAsTaken")}
           </button>
         </div>
       </div>
@@ -136,7 +138,7 @@ export default function MedicationStatusRow({ status, childId, onUpdated }) {
               whiteSpace: "nowrap",
             }}
           >
-            Save
+            {t("common.save")}
           </button>
         </div>
       )}

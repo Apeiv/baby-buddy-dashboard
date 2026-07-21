@@ -5,8 +5,10 @@ import { useUnits } from "../utils/units";
 import { downloadFile } from "../utils/download";
 import { colors } from "../utils/colors";
 import ReportRangeBar from "./ReportRangeBar";
+import { useTranslation } from "../locales";
 
 export default function MeasurementsReportModal({ weights, heights, headCircumferences, bmis, onClose }) {
+  const t = useTranslation();
   const units = useUnits();
   const [rangeDays, setRangeDays] = useState(30);
 
@@ -27,9 +29,15 @@ export default function MeasurementsReportModal({ weights, heights, headCircumfe
   };
 
   const cellStyle = { padding: "8px 6px", textAlign: "right", whiteSpace: "nowrap" };
+  const columns = [
+    t("report.columnWeight", { unit: units.weight }),
+    t("report.columnHeight", { unit: units.length }),
+    t("report.columnHeadCircumference", { unit: units.length }),
+    t("report.columnBmi"),
+  ];
 
   return (
-    <Modal title="Daily Report — Measure" onClose={onClose} maxWidth={560}>
+    <Modal title={t("report.measureTitle")} onClose={onClose} maxWidth={560}>
       <ReportRangeBar
         rangeDays={rangeDays}
         setRangeDays={setRangeDays}
@@ -39,15 +47,15 @@ export default function MeasurementsReportModal({ weights, heights, headCircumfe
 
       {rows.length === 0 ? (
         <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 40 }}>
-          No measurements logged in this range
+          {t("report.noMeasurementsInRange")}
         </div>
       ) : (
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
             <thead>
               <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                <th style={{ textAlign: "left", padding: "8px 6px", color: "var(--text-dim)", fontWeight: 500 }}>Date</th>
-                {[`Weight (${units.weight})`, `Height (${units.length})`, `Head Circ. (${units.length})`, "BMI"].map((h) => (
+                <th style={{ textAlign: "left", padding: "8px 6px", color: "var(--text-dim)", fontWeight: 500 }}>{t("report.columnDate")}</th>
+                {columns.map((h) => (
                   <th key={h} style={{ ...cellStyle, color: "var(--text-dim)", fontWeight: 500 }}>
                     {h}
                   </th>

@@ -7,6 +7,7 @@ import { colors } from "./utils/colors";
 import { getAge, formatElapsed, getMedicationStatus } from "./utils/formatters";
 import { subscribeErrorLog, getErrorLog } from "./utils/errorLog";
 import { clickableProps } from "./utils/a11y";
+import { useTranslation, getLocale } from "./locales";
 import OverviewTab from "./tabs/OverviewTab";
 import GrowthTab from "./tabs/GrowthTab";
 import NotesTab from "./tabs/NotesTab";
@@ -25,51 +26,61 @@ import TimerButton from "./components/TimerButton";
 import SettingsModal from "./components/SettingsModal";
 import "./styles.css";
 
-const TABS = [
-  { id: "overview", label: "Overview", icon: <Icons.Activity /> },
-  { id: "growth", label: "Growth", icon: <Icons.TrendUp /> },
-  { id: "notes", label: "Notes & Meds", icon: <Icons.Clipboard /> },
-];
+function getTabs(t) {
+  return [
+    { id: "overview", label: t("tab.overview"), icon: <Icons.Activity /> },
+    { id: "growth", label: t("tab.growth"), icon: <Icons.TrendUp /> },
+    { id: "notes", label: t("tab.notesAndMeds"), icon: <Icons.Clipboard /> },
+  ];
+}
 
-const ACTION_GROUPS = [
-  {
-    label: "Track",
-    actions: [
-      { id: "feeding", label: "Feeding", icon: <Icons.Bottle />, color: colors.feeding },
-      { id: "sleep", label: "Sleep", icon: <Icons.Moon />, color: colors.sleep },
-      { id: "diaper", label: "Diaper", icon: <Icons.Droplet />, color: colors.diaper },
-      { id: "tummy", label: "Tummy", icon: <Icons.Sun />, color: colors.tummy },
-    ],
-  },
-  {
-    label: "Measure",
-    actions: [
-      { id: "temp", label: "Temp", icon: <Icons.Temp />, color: colors.temp },
-      { id: "weight", label: "Weight", icon: <Icons.Weight />, color: colors.growth },
-      { id: "height", label: "Height", icon: <Icons.Ruler />, color: colors.height },
-      { id: "headCircumference", label: "Head Circ.", icon: <Icons.HeadCircle />, color: colors.headCircumference },
-      { id: "bmi", label: "BMI", icon: <Icons.Gauge />, color: colors.bmi },
-    ],
-  },
-  {
-    label: "Medication",
-    actions: [
-      { id: "medication", label: "Medication", icon: <Icons.Pill />, color: colors.medication },
-    ],
-  },
-  {
-    label: "Note",
-    actions: [
-      { id: "note", label: "Note", icon: <Icons.StickyNote />, color: colors.note },
-    ],
-  },
-];
+function getActionGroups(t) {
+  return [
+    {
+      id: "track",
+      label: t("group.track"),
+      actions: [
+        { id: "feeding", label: t("action.feeding"), icon: <Icons.Bottle />, color: colors.feeding },
+        { id: "sleep", label: t("action.sleep"), icon: <Icons.Moon />, color: colors.sleep },
+        { id: "diaper", label: t("action.diaper"), icon: <Icons.Droplet />, color: colors.diaper },
+        { id: "tummy", label: t("action.tummy"), icon: <Icons.Sun />, color: colors.tummy },
+      ],
+    },
+    {
+      id: "measure",
+      label: t("group.measure"),
+      actions: [
+        { id: "temp", label: t("action.temp"), icon: <Icons.Temp />, color: colors.temp },
+        { id: "weight", label: t("action.weight"), icon: <Icons.Weight />, color: colors.growth },
+        { id: "height", label: t("action.height"), icon: <Icons.Ruler />, color: colors.height },
+        { id: "headCircumference", label: t("action.headCircumference"), icon: <Icons.HeadCircle />, color: colors.headCircumference },
+        { id: "bmi", label: t("action.bmi"), icon: <Icons.Gauge />, color: colors.bmi },
+      ],
+    },
+    {
+      id: "medication",
+      label: t("group.medication"),
+      actions: [
+        { id: "medication", label: t("action.medication"), icon: <Icons.Pill />, color: colors.medication },
+      ],
+    },
+    {
+      id: "note",
+      label: t("group.note"),
+      actions: [
+        { id: "note", label: t("action.note"), icon: <Icons.StickyNote />, color: colors.note },
+      ],
+    },
+  ];
+}
 
-const TIMER_TYPES = [
-  { id: "feeding", label: "Feeding", icon: <Icons.Bottle />, color: colors.feeding },
-  { id: "sleep", label: "Sleep", icon: <Icons.Moon />, color: colors.sleep },
-  { id: "tummy", label: "Tummy Time", icon: <Icons.Sun />, color: colors.tummy },
-];
+function getTimerTypes(t) {
+  return [
+    { id: "feeding", label: t("action.feeding"), icon: <Icons.Bottle />, color: colors.feeding },
+    { id: "sleep", label: t("action.sleep"), icon: <Icons.Moon />, color: colors.sleep },
+    { id: "tummy", label: t("action.tummyTime"), icon: <Icons.Sun />, color: colors.tummy },
+  ];
+}
 
 function toLocalDatetime(date) {
   const pad = (n) => String(n).padStart(2, "0");
@@ -85,17 +96,21 @@ function timerNameToType(name) {
 }
 
 export default function App() {
+  const t = useTranslation();
   const data = useBabyData();
   const timer = useTimers(data.timers, data.child?.id);
   const errorLog = useSyncExternalStore(subscribeErrorLog, getErrorLog);
   const [activeTab, setActiveTab] = useState("overview");
   const [modal, setModal] = useState(null);
   const [showActions, setShowActions] = useState(false);
-  const [expandedGroup, setExpandedGroup] = useState("Track");
+  const [expandedGroup, setExpandedGroup] = useState("track");
   const [showTimerPicker, setShowTimerPicker] = useState(false);
   const [editingTimerId, setEditingTimerId] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   const hasOverdueMedication = getMedicationStatus(data.medications || []).some((s) => s.overdue);
+  const TABS = getTabs(t);
+  const ACTION_GROUPS = getActionGroups(t);
+  const TIMER_TYPES = getTimerTypes(t);
 
   const closeModal = () => setModal(null);
   const handleFormDone = () => {
@@ -107,7 +122,7 @@ export default function App() {
     return (
       <div className="app-loading">
         <div className="loading-spinner" />
-        <span style={{ color: "var(--text-muted)", fontSize: 14 }}>Loading...</span>
+        <span style={{ color: "var(--text-muted)", fontSize: 14 }}>{t("header.loading")}</span>
       </div>
     );
   }
@@ -127,7 +142,7 @@ export default function App() {
           </div>
           <div>
             <h1 className="baby-name">
-              {data.child?.first_name || "Baby"}
+              {data.child?.first_name || t("header.defaultBabyName")}
             </h1>
             {data.child?.birth_date && (
               <span className="baby-age">{getAge(data.child.birth_date)}</span>
@@ -136,19 +151,19 @@ export default function App() {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {data.error && (
-            <span className="sync-error">Connection error</span>
+            <span className="sync-error">{t("header.connectionError")}</span>
           )}
           {data.lastSync && !data.error && (
             <span className="sync-time">
-              {data.lastSync.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              {data.lastSync.toLocaleTimeString(getLocale(), { hour: "2-digit", minute: "2-digit" })}
             </span>
           )}
           <button
             className="refresh-btn"
             style={{ position: "relative" }}
             onClick={() => setShowSettings(true)}
-            title="Settings"
-            aria-label={`Settings${errorLog.length > 0 ? ` (${errorLog.length} unread errors)` : ""}`}
+            title={t("header.settings")}
+            aria-label={errorLog.length > 0 ? t("header.settingsUnread", { count: errorLog.length }) : t("header.settings")}
           >
             <Icons.Settings />
             {errorLog.length > 0 && (
@@ -193,25 +208,25 @@ export default function App() {
       )}
 
       {/* Active Timer Bars */}
-      {timer.activeTimers.map((t) => (
-        <div key={t.id} className="timer-bar fade-in">
+      {timer.activeTimers.map((activeTimer) => (
+        <div key={activeTimer.id} className="timer-bar fade-in">
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span className="timer-pulse" />
             <Icons.Timer />
             <span style={{ fontSize: 13, fontWeight: 500 }}>
-              {t.name}
+              {activeTimer.name}
             </span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            {editingTimerId === t.id ? (
+            {editingTimerId === activeTimer.id ? (
               <input
                 type="datetime-local"
                 className="timer-edit-input"
-                defaultValue={toLocalDatetime(t.start)}
+                defaultValue={toLocalDatetime(activeTimer.start)}
                 autoFocus
                 onBlur={(e) => {
                   if (e.target.value) {
-                    timer.editTimer(t.id, `${e.target.value}:00`);
+                    timer.editTimer(activeTimer.id, `${e.target.value}:00`);
                   }
                   setEditingTimerId(null);
                 }}
@@ -224,28 +239,28 @@ export default function App() {
               <span
                 className="timer-elapsed"
                 style={{ cursor: "pointer" }}
-                title="Click to edit start time"
-                {...clickableProps(() => setEditingTimerId(t.id))}
-                aria-label={`Elapsed time ${formatElapsed(timer.elapsedMap[t.id] || 0)}, click to edit start time`}
+                title={t("header.timerEditHint")}
+                {...clickableProps(() => setEditingTimerId(activeTimer.id))}
+                aria-label={t("header.timerElapsed", { elapsed: formatElapsed(timer.elapsedMap[activeTimer.id] || 0) })}
               >
-                {formatElapsed(timer.elapsedMap[t.id] || 0)}
+                {formatElapsed(timer.elapsedMap[activeTimer.id] || 0)}
               </span>
             )}
             <button
               className="timer-save-btn"
               onClick={async () => {
-                const stopped = await timer.stopTimer(t.id);
+                const stopped = await timer.stopTimer(activeTimer.id);
                 if (stopped) {
                   setModal({ type: timerNameToType(stopped.name), timerId: stopped.id });
                 }
               }}
             >
-              Save
+              {t("header.timerSave")}
             </button>
             <button
               className="timer-discard-btn"
-              onClick={() => timer.discardTimer(t.id)}
-              aria-label={`Discard ${t.name} timer`}
+              onClick={() => timer.discardTimer(activeTimer.id)}
+              aria-label={t("header.timerDiscard", { name: activeTimer.name })}
             >
               <Icons.X />
             </button>
@@ -267,7 +282,7 @@ export default function App() {
             {tab.id === "notes" && hasOverdueMedication && (
               <span
                 className="tab-alert-dot"
-                aria-label="Medication overdue"
+                aria-label={t("header.medicationOverdue")}
               />
             )}
           </button>
@@ -321,12 +336,12 @@ export default function App() {
         {showActions && (
           <div className="fab-menu fade-in">
             {ACTION_GROUPS.map((group) => {
-              const isOpen = expandedGroup === group.label;
+              const isOpen = expandedGroup === group.id;
               return (
-                <div key={group.label} className="fab-group">
+                <div key={group.id} className="fab-group">
                   <button
                     className={`fab-group-label${isOpen ? " fab-group-label-active" : ""}`}
-                    onClick={() => setExpandedGroup(isOpen ? null : group.label)}
+                    onClick={() => setExpandedGroup(isOpen ? null : group.id)}
                   >
                     {group.label}
                   </button>
@@ -359,28 +374,28 @@ export default function App() {
         )}
         {showTimerPicker && (
           <div className="fab-menu fade-in" style={{ right: 76 }}>
-            {TIMER_TYPES.map((t) => (
+            {TIMER_TYPES.map((timerType) => (
               <button
-                key={t.id}
+                key={timerType.id}
                 className="fab-action"
                 onClick={() => {
-                  timer.startTimer(t.id);
+                  timer.startTimer(timerType.id);
                   setShowTimerPicker(false);
                 }}
               >
                 <span
                   className="fab-action-icon"
-                  style={{ background: `${t.color}18`, color: t.color }}
+                  style={{ background: `${timerType.color}18`, color: timerType.color }}
                 >
-                  {t.icon}
+                  {timerType.icon}
                 </span>
-                <span className="fab-action-label">{t.label}</span>
+                <span className="fab-action-label">{timerType.label}</span>
               </button>
             ))}
           </div>
         )}
         <TimerButton
-          label="Timer"
+          label={t("header.timer")}
           icon={<Icons.Timer />}
           color={colors.feeding}
           active={false}
@@ -392,8 +407,8 @@ export default function App() {
         <button
           className="fab-btn"
           style={{ background: showActions ? "var(--text-muted)" : colors.feeding }}
-          onClick={() => { setShowActions(!showActions); setShowTimerPicker(false); setExpandedGroup("Track"); }}
-          aria-label={showActions ? "Close quick actions" : "Open quick actions"}
+          onClick={() => { setShowActions(!showActions); setShowTimerPicker(false); setExpandedGroup("track"); }}
+          aria-label={showActions ? t("header.closeQuickActions") : t("header.openQuickActions")}
         >
           <span style={{ transform: showActions ? "rotate(45deg)" : "none", transition: "transform 0.2s", display: "flex" }}>
             <Icons.Plus />

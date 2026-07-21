@@ -1,6 +1,8 @@
 import { Icons } from "./Icons";
+import { useTranslation } from "../locales";
 
 export default function Modal({ title, children, onClose, maxWidth = 400 }) {
+  const t = useTranslation();
   return (
     <div
       style={{
@@ -45,7 +47,7 @@ export default function Modal({ title, children, onClose, maxWidth = 400 }) {
           </span>
           <button
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t("common.close")}
             style={{
               background: "none",
               border: "none",

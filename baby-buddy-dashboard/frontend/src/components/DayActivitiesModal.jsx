@@ -11,8 +11,10 @@ import {
 } from "../utils/formatters";
 import { useUnits } from "../utils/units";
 import { clickableProps } from "../utils/a11y";
+import { useTranslation, getLocale } from "../locales";
 
 export default function DayActivitiesModal({ day, type, data, onEditEntry, onClose }) {
+  const t = useTranslation();
   const units = useUnits();
 
   const getIcon = () => {
@@ -34,19 +36,17 @@ export default function DayActivitiesModal({ day, type, data, onEditEntry, onClo
   };
 
   const getTitle = () => {
-    const titles = {
-      feeding: "Feedings",
-      sleep: "Sleep Sessions",
-      tummy: "Tummy Time",
-    };
-    return `${titles[type] || "Activities"} - ${day}`;
+    if (type === "feeding") return t("dayActivities.feedingsTitle", { day });
+    if (type === "sleep") return t("dayActivities.sleepTitle", { day });
+    if (type === "tummy") return t("dayActivities.tummyTitle", { day });
+    return t("dayActivities.activitiesTitle", { day });
   };
 
   const renderContent = () => {
     if (!data || data.length === 0) {
       return (
         <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 40 }}>
-          No {type} activities for this day
+          {t("dayActivities.noneForDay", { type: t(`action.${type}`).toLowerCase() })}
         </div>
       );
     }
@@ -92,8 +92,8 @@ export default function DayActivitiesModal({ day, type, data, onEditEntry, onClo
             >
               <TimelineItem
                 time={`${s.start}–${s.end}`}
-                label={`${s.duration.toFixed(1)}h${s.nap ? " · Nap" : ""}`}
-                detail={`${s.start} to ${s.end}`}
+                label={`${s.duration.toFixed(1)}h${s.nap ? ` · ${t("common.nap")}` : ""}`}
+                detail={`${s.start} ${t("common.to")} ${s.end}`}
                 color={colors.sleep}
                 isLast={i === arr.length - 1}
               />
@@ -106,19 +106,19 @@ export default function DayActivitiesModal({ day, type, data, onEditEntry, onClo
     if (type === "tummy") {
       return (
         <div style={{ display: "flex", flexDirection: "column" }}>
-          {data.map((t, i, arr) => (
+          {data.map((tummyEntry, i, arr) => (
             <div
               key={i}
               className="entry-clickable"
               {...clickableProps(() => {
-                onEditEntry?.("tummy", t);
+                onEditEntry?.("tummy", tummyEntry);
                 onClose();
               })}
             >
               <TimelineItem
-                time={new Date(t.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                label={`${Math.round(parseDuration(t.duration) * 60)} min${t.milestone ? ` · ${t.milestone}` : ""}`}
-                detail={`${new Date(t.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} to ${new Date(t.end).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`}
+                time={new Date(tummyEntry.start).toLocaleTimeString(getLocale(), { hour: "2-digit", minute: "2-digit" })}
+                label={`${Math.round(parseDuration(tummyEntry.duration) * 60)} ${t("common.min")}${tummyEntry.milestone ? ` · ${tummyEntry.milestone}` : ""}`}
+                detail={`${new Date(tummyEntry.start).toLocaleTimeString(getLocale(), { hour: "2-digit", minute: "2-digit" })} ${t("common.to")} ${new Date(tummyEntry.end).toLocaleTimeString(getLocale(), { hour: "2-digit", minute: "2-digit" })}`}
                 color={colors.tummy}
                 isLast={i === arr.length - 1}
               />
