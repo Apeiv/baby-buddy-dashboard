@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.7.5
+
+- Fixed a custom theme (1.7.0) briefly flashing the default dark
+  colors on every page load, even in light mode, before switching to
+  the configured light theme. Two causes, both fixed:
+  - `index.html` had a hardcoded `body { background: #0F1117; }`
+    (the built-in dark color) meant to avoid a white flash before the
+    stylesheet loads - it didn't know about theme overrides, so it
+    painted dark first regardless of configuration. Now uses
+    `var(--bg, #0F1117)`, same fallback, but themed once a value is
+    available.
+  - The backend now inlines the resolved theme directly into
+    `index.html`'s `<head>` on every request (instead of waiting on
+    the client's own config fetch after mount), so the right colors
+    are already known before the page paints at all - caught and
+    fixed a real bug in this while testing locally, where the
+    override was landing before the built stylesheet's `<link>` and
+    silently losing the CSS cascade to the stylesheet's unthemed
+    defaults every time.
+
 ## 1.7.4
 
 - Fixed the app being able to get stuck on the "Loading..." screen

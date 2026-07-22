@@ -83,6 +83,55 @@ def fill_theme_mode_from_preset(current, preset_mode):
     return current
 
 
+THEME_CSS_VAR_NAMES = {
+    "bg": "--bg", "cardBg": "--card-bg", "border": "--border", "text": "--text",
+    "textMuted": "--text-muted", "textDim": "--text-dim", "accent": "--accent",
+}
+
+
+def _theme_mode_is_complete(mode):
+    return bool(mode) and all(mode.get(camel) for camel, _ in THEME_FIELDS)
+
+
+def _theme_mode_css_block(mode):
+    declarations = "\n".join(f"      {THEME_CSS_VAR_NAMES[camel]}: {mode[camel]};" for camel, _ in THEME_FIELDS)
+    return f"  :root {{\n{declarations}\n  }}"
+
+
+def build_theme_css(theme):
+    """Python port of frontend/src/utils/theme.js's buildThemeCss (same all-or-nothing
+    per-mode validation). Used to inline the resolved theme directly into index.html's
+    <head> on every request, so the correct light/dark colors are present at first paint.
+    The client-side applyTheme() (theme.js) still runs after mount too - it's idempotent
+    against identical values, and stays as the source of truth if the two ever diverge -
+    but without this server-side inline copy, the page briefly renders with the built-in
+    default (dark) theme while waiting on the client's own /api/config round trip, which
+    shows as a flash of the wrong theme even on a light-mode device."""
+    blocks = []
+    light = theme.get("light")
+    dark = theme.get("dark")
+    if _theme_mode_is_complete(light):
+        blocks.append(f"@media (prefers-color-scheme: light) {{\n{_theme_mode_css_block(light)}\n}}")
+    if _theme_mode_is_complete(dark):
+        blocks.append(f"@media (prefers-color-scheme: dark) {{\n{_theme_mode_css_block(dark)}\n}}")
+    return "\n\n".join(blocks)
+
+
+def inject_theme_css(html, theme):
+    """Inline the resolved theme into an index.html string, right before </head>.
+
+    Position matters: the built stylesheet's <link> (also in <head>) declares the base,
+    unthemed `:root` variables unconditionally, at the same specificity as this override's
+    `@media (...) { :root { ... } }` block. For equal specificity, the LAST declaration in
+    the document wins - media query or not. Injecting before the stylesheet link (e.g. right
+    after <head>) would put this override first, so the base variables would always win the
+    cascade and silently discard it, regardless of which prefers-color-scheme matches."""
+    css = build_theme_css(theme)
+    if not css:
+        return html
+    return html.replace("</head>", f'<style id="custom-theme-overrides">{css}</style></head>', 1)
+
+
 # --- Configuration ---
 
 BABY_BUDDY_URL = os.environ.get("BABY_BUDDY_URL", "").rstrip("/")
@@ -266,6 +315,11 @@ if STATIC_DIR.exists():
         if ingress_path:
             base_href = ingress_path.rstrip("/") + "/"
             index_html = index_html.replace("<head>", f'<head><base href="{base_href}">', 1)
+
+        # Inline the resolved theme so the right light/dark colors are present at first
+        # paint, instead of the default (dark) theme flashing before the client JS fetches
+        # /api/config and applies the override after mount.
+        index_html = inject_theme_css(index_html, THEME)
 
         return Response(
             content=index_html,
