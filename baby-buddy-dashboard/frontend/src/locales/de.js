@@ -130,6 +130,7 @@ export default {
     perDay30d: "pro Tag (30 Tage)",
     feedingsPerDay30d: "{count} Fütterungen/Tag (30 Tage)",
     avgGap: "~{gap} Ø Abstand",
+    avgBreastDuration: "~{duration} Ø Stilldauer",
     dailyFeeding30d: "Tägliche Fütterung (30 Tage)",
     dailySleep30d: "Täglicher Schlaf (30 Tage)",
     weightTrend: "Gewichtsverlauf",

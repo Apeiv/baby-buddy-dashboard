@@ -130,6 +130,7 @@ export default {
     perDay30d: "al giorno (30gg)",
     feedingsPerDay30d: "{count} pappe/giorno (30gg)",
     avgGap: "~{gap} intervallo medio",
+    avgBreastDuration: "~{duration} durata media al seno",
     dailyFeeding30d: "Pappa Giornaliera (30gg)",
     dailySleep30d: "Sonno Giornaliero (30gg)",
     weightTrend: "Andamento Peso",

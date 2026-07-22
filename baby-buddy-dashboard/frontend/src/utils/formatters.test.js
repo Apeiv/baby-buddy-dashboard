@@ -14,6 +14,7 @@ import {
   buildDailyMeasurementsReport,
   toFeedingTimeline,
   averageFeedingGapMs,
+  averageBreastFeedingDurationMs,
   translateDosageUnit,
 } from "./formatters";
 import { setLanguage } from "../locales";
@@ -245,6 +246,45 @@ describe("toFeedingTimeline", () => {
     const [itEntry] = toFeedingTimeline([{ start: NOW.toISOString(), amount: 120, method: "bottle" }]);
     expect(itEntry.label).toBe("120 mL Biberon");
     setLanguage("en");
+  });
+
+  it("appends session duration for breastfeeding methods only", () => {
+    const start = new Date(NOW.getTime() - 20 * 60_000).toISOString();
+    const [breastEntry] = toFeedingTimeline([{ start, end: NOW.toISOString(), method: "left breast" }]);
+    expect(breastEntry.label).toBe("Left Breast · 20m");
+
+    const [bottleEntry] = toFeedingTimeline([{ start, end: NOW.toISOString(), amount: 120, method: "bottle" }]);
+    expect(bottleEntry.label).toBe("120 mL Bottle");
+  });
+
+  it("omits duration when start/end are missing or non-positive", () => {
+    const [noEnd] = toFeedingTimeline([{ start: NOW.toISOString(), method: "left breast" }]);
+    expect(noEnd.label).toBe("Left Breast");
+
+    const [zeroLength] = toFeedingTimeline([{ start: NOW.toISOString(), end: NOW.toISOString(), method: "right breast" }]);
+    expect(zeroLength.label).toBe("Right Breast");
+  });
+});
+
+describe("averageBreastFeedingDurationMs", () => {
+  it("returns null when there are no breastfeeding entries", () => {
+    expect(averageBreastFeedingDurationMs([])).toBeNull();
+    expect(averageBreastFeedingDurationMs([{ start: NOW.toISOString(), end: NOW.toISOString(), method: "bottle", amount: 120 }])).toBeNull();
+  });
+
+  it("averages only the breastfeeding sessions, ignoring bottle feeds", () => {
+    const mk = (mins, method) => ({
+      start: NOW.toISOString(),
+      end: new Date(NOW.getTime() + mins * 60_000).toISOString(),
+      method,
+    });
+    const feedings = [
+      mk(10, "left breast"),
+      mk(20, "right breast"),
+      mk(999, "bottle"), // should be ignored entirely
+    ];
+    // (10 + 20) / 2 = 15 minutes
+    expect(averageBreastFeedingDurationMs(feedings)).toBe(15 * 60_000);
   });
 });
 

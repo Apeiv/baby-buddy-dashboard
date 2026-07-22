@@ -19,7 +19,7 @@ import GrowthTrendChart from "../components/GrowthTrendChart";
 import { Icons } from "../components/Icons";
 import { colors } from "../utils/colors";
 import { useUnits } from "../utils/units";
-import { dailyFeedingTotals, dailySleepTotals, dailyDiaperTotals, getEntriesForDate, averageFeedingGapMs, formatElapsedHM } from "../utils/formatters";
+import { dailyFeedingTotals, dailySleepTotals, dailyDiaperTotals, getEntriesForDate, averageFeedingGapMs, averageBreastFeedingDurationMs, formatElapsedHM } from "../utils/formatters";
 import { clickableProps } from "../utils/a11y";
 import { useFeedingChartMetrics } from "../hooks/useFeedingChartMetrics";
 import { useTranslation, getLocale } from "../locales";
@@ -56,6 +56,7 @@ export default function GrowthTab({ childId, demoMode, birthDate, childSex, weig
     ? Math.round(feedCountDays.reduce((s, d) => s + d.count, 0) / feedCountDays.length)
     : 0;
   const avgFeedingGapMs = averageFeedingGapMs(monthlyFeedings);
+  const avgBreastDurationMs = averageBreastFeedingDurationMs(monthlyFeedings);
   const sleepDays = sleepSeries.filter((d) => d.hours > 0);
   const avgSleep = sleepDays.length
     ? (sleepDays.reduce((s, d) => s + d.hours, 0) / sleepDays.length).toFixed(1)
@@ -303,6 +304,11 @@ export default function GrowthTab({ childId, demoMode, birthDate, childSex, weig
             {avgFeedingGapMs && (
               <div style={{ fontSize: 12, color: "var(--text-dim)", marginTop: 2 }}>
                 {t("growth.avgGap", { gap: formatElapsedHM(avgFeedingGapMs) })}
+              </div>
+            )}
+            {avgBreastDurationMs && (
+              <div style={{ fontSize: 12, color: "var(--text-dim)", marginTop: 2 }}>
+                {t("growth.avgBreastDuration", { duration: formatElapsedHM(avgBreastDurationMs) })}
               </div>
             )}
           </div>

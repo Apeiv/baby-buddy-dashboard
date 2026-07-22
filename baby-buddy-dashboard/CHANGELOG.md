@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.1
+
+- Added breastfeeding session duration. Recent Feedings entries for
+  left/right/both-breast feeds now show how long the session lasted
+  (e.g. "Left Breast · 20m") - bottle feeds are unaffected since the
+  mL amount is already the more meaningful number there. The Growth
+  tab's Avg Feeding card also gains a "~15m avg breast duration" line
+  alongside the existing average gap.
+
 ## 1.7.0
 
 - Added custom theme colors and a CI test workflow.

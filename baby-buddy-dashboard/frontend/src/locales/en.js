@@ -130,6 +130,7 @@ export default {
     perDay30d: "per day (30d)",
     feedingsPerDay30d: "{count} feedings/day (30d)",
     avgGap: "~{gap} avg gap",
+    avgBreastDuration: "~{duration} avg breast duration",
     dailyFeeding30d: "Daily Feeding (30d)",
     dailySleep30d: "Daily Sleep (30d)",
     weightTrend: "Weight Trend",

@@ -83,6 +83,16 @@ function translateFeedingMethodOrType(value) {
   return key ? t(key) : value;
 }
 
+// Bottle-fed amounts are already shown in mL, which is the more meaningful number there;
+// breastfeeding has no defined amount, so its session length is shown instead.
+const BREAST_FEEDING_METHODS = new Set(["left breast", "right breast", "both breasts"]);
+
+function feedingDurationMs(f) {
+  if (!f.start || !f.end || !BREAST_FEEDING_METHODS.has(f.method)) return null;
+  const ms = new Date(f.end).getTime() - new Date(f.start).getTime();
+  return ms > 0 ? ms : null;
+}
+
 export function toFeedingTimeline(feedings, volumeUnit = "mL") {
   // feedings is ordered most-recent-first. The newest entry shows time since now;
   // every other entry shows the gap to the next (more recent) feeding instead, since
@@ -93,9 +103,11 @@ export function toFeedingTimeline(feedings, volumeUnit = "mL") {
       i === 0
         ? timeAgo(f.end || f.start)
         : t("time.gap", { elapsed: formatElapsedHM(new Date(arr[i - 1].end || arr[i - 1].start).getTime() - thisTime) });
+    const durationMs = feedingDurationMs(f);
+    const label = `${f.amount ? f.amount + " " + volumeUnit : ""} ${translateFeedingMethodOrType(f.method || f.type)}`.trim() || t("action.feeding");
     return {
       time: formatTime(f.end || f.start),
-      label: `${f.amount ? f.amount + " " + volumeUnit : ""} ${translateFeedingMethodOrType(f.method || f.type)}`.trim() || t("action.feeding"),
+      label: durationMs ? `${label} · ${formatElapsedHM(durationMs)}` : label,
       detail,
       amount: f.amount || 0,
       type: f.type,
@@ -319,6 +331,12 @@ export function averageFeedingGapMs(feedings) {
   let totalGap = 0;
   for (let i = 1; i < times.length; i++) totalGap += times[i] - times[i - 1];
   return totalGap / (times.length - 1);
+}
+
+export function averageBreastFeedingDurationMs(feedings) {
+  const durations = (feedings || []).map(feedingDurationMs).filter((ms) => ms != null);
+  if (!durations.length) return null;
+  return durations.reduce((sum, ms) => sum + ms, 0) / durations.length;
 }
 
 export function dailyFeedingTotals(entries, numDays = 30) {
