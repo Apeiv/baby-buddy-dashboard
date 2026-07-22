@@ -111,6 +111,27 @@ def test_fill_theme_mode_from_options_treats_literal_null_string_as_unset():
     assert result["cardBg"] == ""
 
 
+@pytest.mark.parametrize("raw,expected", [("teal_terracotta", "teal_terracotta"), ("", ""), ("bogus", ""), (None, "")])
+def test_sanitize_color_preset(raw, expected):
+    assert server_mod.sanitize_color_preset(raw) == expected
+
+
+def test_fill_theme_mode_from_preset_only_fills_gaps():
+    current = {"bg": "#CUSTOM", "cardBg": "", "border": "", "text": "", "textMuted": "", "textDim": "", "accent": ""}
+    preset_mode = server_mod.THEME_PRESETS["teal_terracotta"]["light"]
+    result = server_mod.fill_theme_mode_from_preset(current, preset_mode)
+    assert result["bg"] == "#CUSTOM"  # explicit value wins, not overwritten by the preset
+    assert result["cardBg"] == preset_mode["cardBg"]  # gap filled from the preset
+    assert result["accent"] == preset_mode["accent"]
+
+
+def test_theme_presets_have_all_seven_fields_for_both_modes():
+    expected_fields = {"bg", "cardBg", "border", "text", "textMuted", "textDim", "accent"}
+    for preset in server_mod.THEME_PRESETS.values():
+        assert set(preset["light"].keys()) == expected_fields
+        assert set(preset["dark"].keys()) == expected_fields
+
+
 async def test_proxy_baby_buddy_forwards_get_request(app_client):
     async with app_client as client:
         res = await client.get("/api/baby-buddy/children/")

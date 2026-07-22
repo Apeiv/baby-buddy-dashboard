@@ -55,6 +55,34 @@ def fill_theme_mode_from_options(mode, current, opts):
     return current
 
 
+# Built-in color schemes a user can pick by name instead of filling in all 14 theme_*
+# fields by hand. Individual theme_* fields, if set, always win over the preset's value
+# for that field - the preset only fills gaps, same precedence as the options.json fallback.
+THEME_PRESETS = {
+    "teal_terracotta": {
+        "light": {
+            "bg": "#F5F2EA", "cardBg": "#FDFCF8", "border": "rgba(40, 30, 16, 0.08)",
+            "text": "#1B1812", "textMuted": "#6B6557", "textDim": "#A8A294", "accent": "#2A9D8F",
+        },
+        "dark": {
+            "bg": "#14110C", "cardBg": "#1C1814", "border": "rgba(245, 242, 234, 0.08)",
+            "text": "#F2EFE6", "textMuted": "#A8A294", "textDim": "#6B6557", "accent": "#3FB8A9",
+        },
+    },
+}
+
+
+def sanitize_color_preset(value):
+    return value if value in THEME_PRESETS else ""
+
+
+def fill_theme_mode_from_preset(current, preset_mode):
+    for camel, _ in THEME_FIELDS:
+        if not current.get(camel):
+            current[camel] = preset_mode.get(camel, "")
+    return current
+
+
 # --- Configuration ---
 
 BABY_BUDDY_URL = os.environ.get("BABY_BUDDY_URL", "").rstrip("/")
@@ -64,6 +92,7 @@ DEMO_MODE = os.environ.get("DEMO_MODE", "").lower() in ("true", "1", "yes")
 UNIT_SYSTEM = os.environ.get("UNIT_SYSTEM", "metric").lower()
 ENABLE_MEDICATION_ALERTS = os.environ.get("ENABLE_MEDICATION_ALERTS", "").lower() in ("true", "1", "yes")
 CHILD_SEX = sanitize_child_sex(os.environ.get("CHILD_SEX", ""))
+COLOR_PRESET = sanitize_color_preset(os.environ.get("COLOR_PRESET", ""))
 THEME = {"light": read_theme_mode_from_env("light"), "dark": read_theme_mode_from_env("dark")}
 
 # Fallback: read from HA add-on options.json
@@ -78,8 +107,13 @@ if not BABY_BUDDY_URL:
         UNIT_SYSTEM = opts.get("unit_system", UNIT_SYSTEM)
         ENABLE_MEDICATION_ALERTS = ENABLE_MEDICATION_ALERTS or opts.get("enable_medication_alerts", False)
         CHILD_SEX = CHILD_SEX or sanitize_child_sex(opts.get("child_sex", ""))
+        COLOR_PRESET = COLOR_PRESET or sanitize_color_preset(opts.get("color_preset", ""))
         THEME["light"] = fill_theme_mode_from_options("light", THEME["light"], opts)
         THEME["dark"] = fill_theme_mode_from_options("dark", THEME["dark"], opts)
+
+if COLOR_PRESET:
+    THEME["light"] = fill_theme_mode_from_preset(THEME["light"], THEME_PRESETS[COLOR_PRESET]["light"])
+    THEME["dark"] = fill_theme_mode_from_preset(THEME["dark"], THEME_PRESETS[COLOR_PRESET]["dark"])
 
 SUPERVISOR_TOKEN = os.environ.get("SUPERVISOR_TOKEN", "")
 

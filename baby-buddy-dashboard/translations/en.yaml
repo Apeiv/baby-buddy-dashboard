@@ -20,6 +20,9 @@ configuration:
   child_sex:
     name: Child's Sex
     description: "Optional - lets the Growth tab overlay WHO growth-standard percentile curves (weight, height, head circumference, BMI) on top of your child's own measurements. Baby Buddy itself doesn't store this, so it's set here instead. Leave unset to hide the percentile overlay."
+  color_preset:
+    name: Color Preset
+    description: "Optional - pick a built-in color scheme instead of filling in the 14 'Theme' fields below by hand. Currently available: teal_terracotta (warm cream/near-black with a teal accent, light and dark). Any individual 'Theme' field you also set below overrides the preset's value for that field only."
   theme_light_bg:
     name: "Theme (Light): Background"
     description: "Optional - custom page background color for light mode (any valid CSS color, e.g. #F5F2EA). Leave all seven 'Theme (Light)' fields unset to use the built-in theme; if you set any, set all seven or the light override is skipped."

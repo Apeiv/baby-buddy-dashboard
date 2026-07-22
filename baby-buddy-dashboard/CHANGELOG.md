@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.7.3
+
+- Added a "Color Preset" add-on option (`color_preset`) that fills in
+  the 14 `theme_*` fields (added in 1.7.0) for you: pick
+  `teal_terracotta` - a warm cream/near-black scheme with a teal
+  accent, for light and dark mode - instead of typing all 14 colors
+  by hand. Any individual `theme_*` field you also set overrides the
+  preset's value for that one field only, so you can start from a
+  preset and tweak just what you want. Leave it unset and nothing
+  changes.
+
 ## 1.7.2
 
 - Fixed custom theme colors (added in 1.7.0) rendering cards with no
