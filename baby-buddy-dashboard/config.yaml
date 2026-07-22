@@ -1,5 +1,5 @@
 name: "Baby Buddy Dashboard"
-version: "1.6.0"
+version: "1.7.0"
 slug: "baby-buddy-dashboard"
 description: "Modern dashboard for Baby Buddy with charts, timers, and quick-log actions.
               Supports running as a standalone web app or as a Home Assistant add-on.
@@ -36,3 +36,17 @@ schema:
   unit_system: "list(metric|imperial)"
   enable_medication_alerts: bool
   child_sex: "list(male|female)?"
+  theme_light_bg: "str?"
+  theme_light_card_bg: "str?"
+  theme_light_border: "str?"
+  theme_light_text: "str?"
+  theme_light_text_muted: "str?"
+  theme_light_text_dim: "str?"
+  theme_light_accent: "str?"
+  theme_dark_bg: "str?"
+  theme_dark_card_bg: "str?"
+  theme_dark_border: "str?"
+  theme_dark_text: "str?"
+  theme_dark_text_muted: "str?"
+  theme_dark_text_dim: "str?"
+  theme_dark_accent: "str?"

@@ -1,4 +1,4 @@
-import { useState, useSyncExternalStore } from "react";
+import { useState, useEffect, useSyncExternalStore } from "react";
 import { useBabyData } from "./hooks/useBabyData";
 import { useTimers } from "./hooks/useTimers";
 import { UnitContext } from "./utils/units";
@@ -7,6 +7,7 @@ import { colors } from "./utils/colors";
 import { getAge, formatElapsed, getMedicationStatus } from "./utils/formatters";
 import { subscribeErrorLog, getErrorLog } from "./utils/errorLog";
 import { clickableProps } from "./utils/a11y";
+import { applyTheme } from "./utils/theme";
 import { useTranslation, getLocale } from "./locales";
 import OverviewTab from "./tabs/OverviewTab";
 import GrowthTab from "./tabs/GrowthTab";
@@ -99,6 +100,11 @@ export default function App() {
   const t = useTranslation();
   const data = useBabyData();
   const timer = useTimers(data.timers, data.child?.id);
+
+  useEffect(() => {
+    if (data.theme) applyTheme(data.theme);
+  }, [data.theme]);
+
   const errorLog = useSyncExternalStore(subscribeErrorLog, getErrorLog);
   const [activeTab, setActiveTab] = useState("overview");
   const [modal, setModal] = useState(null);
@@ -408,7 +414,7 @@ export default function App() {
         />
         <button
           className="fab-btn"
-          style={{ background: showActions ? "var(--text-muted)" : colors.feeding }}
+          style={{ background: showActions ? "var(--text-muted)" : "var(--accent)" }}
           onClick={() => { setShowActions(!showActions); setShowTimerPicker(false); setExpandedGroup("track"); }}
           aria-label={showActions ? t("header.closeQuickActions") : t("header.openQuickActions")}
         >

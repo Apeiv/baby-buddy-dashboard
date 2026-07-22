@@ -42,12 +42,48 @@ async def test_get_config_returns_settings_without_secrets():
     assert "baby_buddy_api_key" not in json.dumps(body)
 
 
+async def test_get_config_theme_has_both_modes_with_all_seven_fields():
+    transport = httpx.ASGITransport(app=server_mod.app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+        res = await client.get("/api/config")
+    theme = res.json()["theme"]
+    assert set(theme.keys()) == {"light", "dark"}
+    expected_fields = {"bg", "cardBg", "border", "text", "textMuted", "textDim", "accent"}
+    assert set(theme["light"].keys()) == expected_fields
+    assert set(theme["dark"].keys()) == expected_fields
+
+
 @pytest.mark.parametrize(
     "raw,expected",
     [("male", "male"), ("female", "female"), ("", ""), ("null", ""), ("Male", ""), (None, "")],
 )
 def test_sanitize_child_sex_rejects_invalid_values(raw, expected):
     assert server_mod.sanitize_child_sex(raw) == expected
+
+
+def test_read_theme_mode_from_env_reads_all_seven_fields(monkeypatch):
+    monkeypatch.setenv("THEME_LIGHT_BG", "#F5F2EA")
+    monkeypatch.setenv("THEME_LIGHT_CARD_BG", "#FDFCF8")
+    monkeypatch.setenv("THEME_LIGHT_ACCENT", "#2A9D8F")
+    mode = server_mod.read_theme_mode_from_env("light")
+    assert mode["bg"] == "#F5F2EA"
+    assert mode["cardBg"] == "#FDFCF8"
+    assert mode["accent"] == "#2A9D8F"
+    # Unset fields default to empty string, not a missing key.
+    assert mode["border"] == ""
+    assert set(mode.keys()) == {"bg", "cardBg", "border", "text", "textMuted", "textDim", "accent"}
+
+
+def test_fill_theme_mode_from_options_only_fills_gaps():
+    current = {"bg": "#111111", "cardBg": "", "border": "", "text": "", "textMuted": "", "textDim": "", "accent": ""}
+    opts = {
+        "theme_light_bg": "#FROM_OPTIONS_SHOULD_NOT_WIN",
+        "theme_light_card_bg": "#222222",
+    }
+    result = server_mod.fill_theme_mode_from_options("light", current, opts)
+    assert result["bg"] == "#111111"  # env var value wins, not overwritten
+    assert result["cardBg"] == "#222222"  # gap filled from options.json
+    assert result["border"] == ""  # stays empty, not present in opts
 
 
 async def test_proxy_baby_buddy_forwards_get_request(app_client):

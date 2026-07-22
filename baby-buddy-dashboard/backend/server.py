@@ -20,6 +20,30 @@ def sanitize_child_sex(value):
     return value if value in ("male", "female") else ""
 
 
+# camelCase API field -> snake_case suffix used in both env var names (THEME_{MODE}_{SUFFIX})
+# and add-on option keys (theme_{mode}_{suffix}).
+THEME_FIELDS = [
+    ("bg", "bg"),
+    ("cardBg", "card_bg"),
+    ("border", "border"),
+    ("text", "text"),
+    ("textMuted", "text_muted"),
+    ("textDim", "text_dim"),
+    ("accent", "accent"),
+]
+
+
+def read_theme_mode_from_env(mode):
+    return {camel: os.environ.get(f"THEME_{mode.upper()}_{suffix.upper()}", "") for camel, suffix in THEME_FIELDS}
+
+
+def fill_theme_mode_from_options(mode, current, opts):
+    for camel, suffix in THEME_FIELDS:
+        if not current.get(camel):
+            current[camel] = opts.get(f"theme_{mode}_{suffix}") or ""
+    return current
+
+
 # --- Configuration ---
 
 BABY_BUDDY_URL = os.environ.get("BABY_BUDDY_URL", "").rstrip("/")
@@ -29,6 +53,7 @@ DEMO_MODE = os.environ.get("DEMO_MODE", "").lower() in ("true", "1", "yes")
 UNIT_SYSTEM = os.environ.get("UNIT_SYSTEM", "metric").lower()
 ENABLE_MEDICATION_ALERTS = os.environ.get("ENABLE_MEDICATION_ALERTS", "").lower() in ("true", "1", "yes")
 CHILD_SEX = sanitize_child_sex(os.environ.get("CHILD_SEX", ""))
+THEME = {"light": read_theme_mode_from_env("light"), "dark": read_theme_mode_from_env("dark")}
 
 # Fallback: read from HA add-on options.json
 if not BABY_BUDDY_URL:
@@ -42,6 +67,8 @@ if not BABY_BUDDY_URL:
         UNIT_SYSTEM = opts.get("unit_system", UNIT_SYSTEM)
         ENABLE_MEDICATION_ALERTS = ENABLE_MEDICATION_ALERTS or opts.get("enable_medication_alerts", False)
         CHILD_SEX = CHILD_SEX or sanitize_child_sex(opts.get("child_sex", ""))
+        THEME["light"] = fill_theme_mode_from_options("light", THEME["light"], opts)
+        THEME["dark"] = fill_theme_mode_from_options("dark", THEME["dark"], opts)
 
 SUPERVISOR_TOKEN = os.environ.get("SUPERVISOR_TOKEN", "")
 
@@ -100,6 +127,7 @@ async def get_config():
         "demo_mode": DEMO_MODE,
         "unit_system": UNIT_SYSTEM,
         "child_sex": CHILD_SEX,
+        "theme": THEME,
     }
 
 

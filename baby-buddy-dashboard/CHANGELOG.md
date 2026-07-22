@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.7.0
+
+- Added custom theme colors and a CI test workflow.
+  - 14 new optional add-on options let you match the dashboard to
+    your own Home Assistant theme: background, card background,
+    border, text, muted text, dim text, and an accent color, each for
+    light and dark mode separately (e.g. `theme_light_bg`,
+    `theme_dark_accent`). Light/dark switching follows the device's
+    own color-scheme setting automatically. Per-category colors
+    (feeding, sleep, diaper, ...) are intentionally not affected -
+    they're functional, not decorative. Leave everything unset (the
+    default) and nothing changes from today's look; a mode is only
+    overridden once all seven of its fields are filled in, to avoid
+    an unreadable half-themed page.
+  - Added `.github/workflows/test.yml`: runs the full frontend
+    (Vitest) and backend (pytest) suites, plus a production build, on
+    every push and pull request.
+
 ## 1.6.0
 
 - Added WHO growth-standard percentile overlays to the Weight, Height,
