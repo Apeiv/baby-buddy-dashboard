@@ -61,3 +61,57 @@ describe("api request building", () => {
     await expect(api.getWeight()).rejects.toThrow(/API error 404/);
   });
 });
+
+describe("request timeout", () => {
+  // A request that just never settles (dead wifi, a backgrounded mobile tab, a proxy that
+  // drops the response) must not hang forever - especially getConfig(), whose promise
+  // chain gates the whole app's initial loading spinner.
+  function hangingFetchRespectingAbort() {
+    return vi.fn((url, options) => {
+      return new Promise((resolve, reject) => {
+        options?.signal?.addEventListener("abort", () => {
+          const err = new Error("The operation was aborted");
+          err.name = "AbortError";
+          reject(err);
+        });
+      });
+    });
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("aborts a hung API request after the timeout and rejects instead of hanging forever", async () => {
+    vi.stubGlobal("fetch", hangingFetchRespectingAbort());
+    const promise = api.getChildren();
+    const assertion = expect(promise).rejects.toThrow(/timed out/i);
+    await vi.advanceTimersByTimeAsync(15000);
+    await assertion;
+  });
+
+  it("aborts a hung getConfig() request after the timeout and rejects instead of hanging forever", async () => {
+    vi.stubGlobal("fetch", hangingFetchRespectingAbort());
+    const promise = api.getConfig();
+    const assertion = expect(promise).rejects.toThrow(/timed out/i);
+    await vi.advanceTimersByTimeAsync(15000);
+    await assertion;
+  });
+
+  it("passes an abort signal to fetch so a real browser request actually cancels", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(jsonResponse({ results: [] }));
+    vi.stubGlobal("fetch", fetchMock);
+    await api.getChildren();
+    const [, config] = fetchMock.mock.calls[0];
+    expect(config.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it("does not time out a request that resolves well within the deadline", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(jsonResponse({ results: [] })));
+    await expect(api.getChildren()).resolves.toEqual({ results: [] });
+  });
+});

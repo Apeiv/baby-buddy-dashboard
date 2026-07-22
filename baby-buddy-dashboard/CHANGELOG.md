@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.7.4
+
+- Fixed the app being able to get stuck on the "Loading..." screen
+  forever with no way to recover short of a manual page reload. Every
+  API request (including the very first one, which fetches the
+  add-on's config and gates the loading spinner) used a plain
+  `fetch()` with no timeout - if a request just stalled instead of
+  failing outright (flaky wifi, a backgrounded mobile browser tab, an
+  ingress proxy that silently drops the response), its promise never
+  settled, so the code that clears the spinner never ran. Requests
+  now abort after 15s and surface as a normal connection error - the
+  existing "Connection error" header banner and empty-state UI, which
+  already existed for a failed request, now also cover a hung one.
+
 ## 1.7.3
 
 - Added a "Color Preset" add-on option (`color_preset`) that fills in
