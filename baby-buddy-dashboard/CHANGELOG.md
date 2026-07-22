@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.7.2
+
+- Fixed custom theme colors (added in 1.7.0) rendering cards with no
+  visible contrast against the page background on some Home Assistant
+  Supervisor versions. Root cause: a leftover, unconfigured theme
+  option (e.g. `theme_light_border`) could be read back as the
+  literal text "null" instead of empty - the add-on then emitted
+  invalid CSS like `--card-bg: null;`, which browsers silently
+  resolve to transparent rather than falling back to the built-in
+  theme. Unset theme fields are now always treated as empty,
+  regardless of how the Supervisor reports them.
+
 ## 1.7.1
 
 - Added breastfeeding session duration. Recent Feedings entries for

@@ -33,14 +33,25 @@ THEME_FIELDS = [
 ]
 
 
+def sanitize_theme_value(value):
+    """bashio::config returns the literal string 'null' (not '') for an unset optional
+    field in some Supervisor versions - treat that the same as genuinely empty, otherwise
+    it leaks through as an invalid CSS custom property value (e.g. `--card-bg: null;`),
+    which browsers resolve to transparent instead of falling back to the default theme."""
+    return value if value and value != "null" else ""
+
+
 def read_theme_mode_from_env(mode):
-    return {camel: os.environ.get(f"THEME_{mode.upper()}_{suffix.upper()}", "") for camel, suffix in THEME_FIELDS}
+    return {
+        camel: sanitize_theme_value(os.environ.get(f"THEME_{mode.upper()}_{suffix.upper()}", ""))
+        for camel, suffix in THEME_FIELDS
+    }
 
 
 def fill_theme_mode_from_options(mode, current, opts):
     for camel, suffix in THEME_FIELDS:
         if not current.get(camel):
-            current[camel] = opts.get(f"theme_{mode}_{suffix}") or ""
+            current[camel] = sanitize_theme_value(opts.get(f"theme_{mode}_{suffix}") or "")
     return current
 
 

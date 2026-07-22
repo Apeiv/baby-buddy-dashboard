@@ -74,6 +74,24 @@ def test_read_theme_mode_from_env_reads_all_seven_fields(monkeypatch):
     assert set(mode.keys()) == {"bg", "cardBg", "border", "text", "textMuted", "textDim", "accent"}
 
 
+def test_read_theme_mode_from_env_treats_literal_null_string_as_unset(monkeypatch):
+    # bashio::config returns the literal string "null" (not "") for an unset optional
+    # field on some Supervisor versions - run.sh's `bashio::config 'theme_light_border' ''`
+    # can still end up exporting THEME_LIGHT_BORDER=null. If that leaked through as-is it
+    # would render `--border: null;` (invalid CSS, resolves to transparent) instead of
+    # being skipped like a genuinely empty field.
+    monkeypatch.setenv("THEME_LIGHT_BG", "#F5F2EA")
+    monkeypatch.setenv("THEME_LIGHT_BORDER", "null")
+    mode = server_mod.read_theme_mode_from_env("light")
+    assert mode["bg"] == "#F5F2EA"
+    assert mode["border"] == ""
+
+
+@pytest.mark.parametrize("raw,expected", [("#2A9D8F", "#2A9D8F"), ("", ""), ("null", ""), (None, "")])
+def test_sanitize_theme_value(raw, expected):
+    assert server_mod.sanitize_theme_value(raw) == expected
+
+
 def test_fill_theme_mode_from_options_only_fills_gaps():
     current = {"bg": "#111111", "cardBg": "", "border": "", "text": "", "textMuted": "", "textDim": "", "accent": ""}
     opts = {
@@ -84,6 +102,13 @@ def test_fill_theme_mode_from_options_only_fills_gaps():
     assert result["bg"] == "#111111"  # env var value wins, not overwritten
     assert result["cardBg"] == "#222222"  # gap filled from options.json
     assert result["border"] == ""  # stays empty, not present in opts
+
+
+def test_fill_theme_mode_from_options_treats_literal_null_string_as_unset():
+    current = {"bg": "", "cardBg": "", "border": "", "text": "", "textMuted": "", "textDim": "", "accent": ""}
+    opts = {"theme_light_card_bg": "null"}
+    result = server_mod.fill_theme_mode_from_options("light", current, opts)
+    assert result["cardBg"] == ""
 
 
 async def test_proxy_baby_buddy_forwards_get_request(app_client):
