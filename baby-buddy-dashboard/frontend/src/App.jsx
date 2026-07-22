@@ -309,6 +309,8 @@ export default function App() {
           <GrowthTab
             childId={data.child?.id}
             demoMode={data.demoMode}
+            birthDate={data.child?.birth_date}
+            childSex={data.childSex}
             weights={data.weights}
             heights={data.heights}
             headCircumferences={data.headCircumferences}

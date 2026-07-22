@@ -38,7 +38,16 @@ async def test_get_config_returns_settings_without_secrets():
     assert "refresh_interval" in body
     assert "demo_mode" in body
     assert "unit_system" in body
+    assert "child_sex" in body
     assert "baby_buddy_api_key" not in json.dumps(body)
+
+
+@pytest.mark.parametrize(
+    "raw,expected",
+    [("male", "male"), ("female", "female"), ("", ""), ("null", ""), ("Male", ""), (None, "")],
+)
+def test_sanitize_child_sex_rejects_invalid_values(raw, expected):
+    assert server_mod.sanitize_child_sex(raw) == expected
 
 
 async def test_proxy_baby_buddy_forwards_get_request(app_client):

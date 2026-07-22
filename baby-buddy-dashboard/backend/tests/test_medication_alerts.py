@@ -14,7 +14,7 @@ from backend.medication_alerts import (
     _publish_state,
 )
 
-NOW = datetime(2026, 7, 20, 12, 0, 0, tzinfo=timezone.utc)
+NOW = datetime.now(timezone.utc)
 
 
 def dose(hours_ago, interval, name="Tylenol"):
@@ -93,7 +93,7 @@ async def test_check_once_detects_overdue_across_children():
         medications_by_child={"1": [dose(8, "06:00:00")], "2": []},
     )
     async with client:
-        assert await _check_once(client) is True
+        assert await _check_once(client, now=NOW) is True
 
 
 async def test_check_once_false_when_nobody_overdue():
@@ -102,7 +102,7 @@ async def test_check_once_false_when_nobody_overdue():
         medications_by_child={"1": [dose(1, "06:00:00")]},
     )
     async with client:
-        assert await _check_once(client) is False
+        assert await _check_once(client, now=NOW) is False
 
 
 async def test_publish_state_posts_expected_entity_and_state():

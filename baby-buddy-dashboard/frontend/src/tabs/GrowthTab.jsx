@@ -1,7 +1,5 @@
 import { useState } from "react";
 import {
-  LineChart,
-  Line,
   AreaChart,
   Area,
   XAxis,
@@ -17,15 +15,16 @@ import DayActivitiesModal from "../components/DayActivitiesModal";
 import ReportModal from "../components/ReportModal";
 import MeasurementsReportModal from "../components/MeasurementsReportModal";
 import ChartSettingsMenu from "../components/ChartSettingsMenu";
+import GrowthTrendChart from "../components/GrowthTrendChart";
 import { Icons } from "../components/Icons";
 import { colors } from "../utils/colors";
 import { useUnits } from "../utils/units";
-import { toGrowthSeries, formatGrowthTick, dailyFeedingTotals, dailySleepTotals, dailyDiaperTotals, getEntriesForDate, averageFeedingGapMs, formatElapsedHM } from "../utils/formatters";
+import { dailyFeedingTotals, dailySleepTotals, dailyDiaperTotals, getEntriesForDate, averageFeedingGapMs, formatElapsedHM } from "../utils/formatters";
 import { clickableProps } from "../utils/a11y";
 import { useFeedingChartMetrics } from "../hooks/useFeedingChartMetrics";
 import { useTranslation, getLocale } from "../locales";
 
-export default function GrowthTab({ childId, demoMode, weights, heights, headCircumferences, bmis, monthlyFeedings, monthlySleep, monthlyChanges, onEditEntry }) {
+export default function GrowthTab({ childId, demoMode, birthDate, childSex, weights, heights, headCircumferences, bmis, monthlyFeedings, monthlySleep, monthlyChanges, onEditEntry }) {
   const t = useTranslation();
   const units = useUnits();
   const [dayModal, setDayModal] = useState(null);
@@ -33,10 +32,6 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
   const [showGrowthReport, setShowGrowthReport] = useState(false);
   const [showMeasureReport, setShowMeasureReport] = useState(false);
   const [feedingMetrics, updateFeedingMetrics] = useFeedingChartMetrics();
-  const weightSeries = toGrowthSeries(weights, "weight");
-  const heightSeries = toGrowthSeries(heights, "height");
-  const headCircumferenceSeries = toGrowthSeries(headCircumferences, "head_circumference");
-  const bmiSeries = toGrowthSeries(bmis, "bmi");
   const feedingSeries = dailyFeedingTotals(monthlyFeedings);
   const sleepSeries = dailySleepTotals(monthlySleep);
   const diaperSeries = dailyDiaperTotals(monthlyChanges || []);
@@ -537,186 +532,66 @@ export default function GrowthTab({ childId, demoMode, weights, heights, headCir
 
         {/* Weight Chart */}
         <div className="fade-in fade-in-7">
-          <SectionCard title={t("growth.weightTrend")} icon={<Icons.Weight />} color={colors.growth}>
-            {weightSeries.length >= 2 ? (
-              <>
-                <div style={{ height: 200 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={weightSeries} onClick={(data) => handleChartClick(data, "weight")}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#252836" vertical={false} />
-                      <XAxis dataKey="timestamp" type="number" scale="time" domain={["dataMin", "dataMax"]} tickFormatter={formatGrowthTick} tick={{ fontSize: 11, fill: "#5A6178" }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 11, fill: "#5A6178" }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
-                      <Tooltip content={<CustomTooltip labelFormatter={formatGrowthTick} />} />
-                      <Line
-                        type="monotone"
-                        dataKey="weight"
-                        stroke={colors.growth}
-                        strokeWidth={2.5}
-                        dot={{ fill: colors.growth, r: 4, cursor: "pointer" }}
-                        activeDot={{ r: 6, cursor: "pointer" }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-                {selectedBar?.type === "weight" && (
-                  <ChartDetailBar
-                    label={formatGrowthTick(selectedBar.label)}
-                    value={selectedBar.value}
-                    unit={units.weight}
-                    color={colors.growth}
-                    actionLabel={t("common.edit")}
-                    onViewEntries={() => {
-                      if (selectedBar.entry) onEditEntry?.("weight", selectedBar.entry);
-                      setSelectedBar(null);
-                    }}
-                    onDismiss={() => setSelectedBar(null)}
-                  />
-                )}
-              </>
-            ) : (
-              <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 40 }}>
-                {weightSeries.length === 1 ? t("growth.needTwoMeasurements") : t("growth.noWeightData")}
-              </div>
-            )}
-          </SectionCard>
+          <GrowthTrendChart
+            title={t("growth.weightTrend")}
+            icon={<Icons.Weight />}
+            color={colors.growth}
+            metric="weight"
+            entries={weights}
+            valueKey="weight"
+            unit={units.weight}
+            birthDate={birthDate}
+            childSex={childSex}
+            onEditEntry={onEditEntry}
+          />
         </div>
 
         {/* Height Chart */}
         <div className="fade-in fade-in-8">
-          <SectionCard title={t("growth.heightTrend")} icon={<Icons.Ruler />} color={colors.height}>
-            {heightSeries.length >= 2 ? (
-              <>
-                <div style={{ height: 200 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={heightSeries} onClick={(data) => handleChartClick(data, "height")}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#252836" vertical={false} />
-                      <XAxis dataKey="timestamp" type="number" scale="time" domain={["dataMin", "dataMax"]} tickFormatter={formatGrowthTick} tick={{ fontSize: 11, fill: "#5A6178" }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 11, fill: "#5A6178" }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
-                      <Tooltip content={<CustomTooltip labelFormatter={formatGrowthTick} />} />
-                      <Line
-                        type="monotone"
-                        dataKey="height"
-                        stroke={colors.height}
-                        strokeWidth={2.5}
-                        dot={{ fill: colors.height, r: 4, cursor: "pointer" }}
-                        activeDot={{ r: 6, cursor: "pointer" }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-                {selectedBar?.type === "height" && (
-                  <ChartDetailBar
-                    label={formatGrowthTick(selectedBar.label)}
-                    value={selectedBar.value}
-                    unit={units.length}
-                    color={colors.height}
-                    actionLabel={t("common.edit")}
-                    onViewEntries={() => {
-                      if (selectedBar.entry) onEditEntry?.("height", selectedBar.entry);
-                      setSelectedBar(null);
-                    }}
-                    onDismiss={() => setSelectedBar(null)}
-                  />
-                )}
-              </>
-            ) : (
-              <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 40 }}>
-                {heightSeries.length === 1 ? t("growth.needTwoMeasurements") : t("growth.noHeightData")}
-              </div>
-            )}
-          </SectionCard>
+          <GrowthTrendChart
+            title={t("growth.heightTrend")}
+            icon={<Icons.Ruler />}
+            color={colors.height}
+            metric="height"
+            entries={heights}
+            valueKey="height"
+            unit={units.length}
+            birthDate={birthDate}
+            childSex={childSex}
+            onEditEntry={onEditEntry}
+          />
         </div>
 
         {/* Head Circumference Chart */}
         <div className="fade-in fade-in-8">
-          <SectionCard title={t("growth.headCircumferenceTrend")} icon={<Icons.HeadCircle />} color={colors.headCircumference}>
-            {headCircumferenceSeries.length >= 2 ? (
-              <>
-                <div style={{ height: 200 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={headCircumferenceSeries} onClick={(data) => handleChartClick(data, "headCircumference")}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#252836" vertical={false} />
-                      <XAxis dataKey="timestamp" type="number" scale="time" domain={["dataMin", "dataMax"]} tickFormatter={formatGrowthTick} tick={{ fontSize: 11, fill: "#5A6178" }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 11, fill: "#5A6178" }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
-                      <Tooltip content={<CustomTooltip labelFormatter={formatGrowthTick} />} />
-                      <Line
-                        type="monotone"
-                        dataKey="head_circumference"
-                        stroke={colors.headCircumference}
-                        strokeWidth={2.5}
-                        dot={{ fill: colors.headCircumference, r: 4, cursor: "pointer" }}
-                        activeDot={{ r: 6, cursor: "pointer" }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-                {selectedBar?.type === "headCircumference" && (
-                  <ChartDetailBar
-                    label={formatGrowthTick(selectedBar.label)}
-                    value={selectedBar.value}
-                    unit={units.length}
-                    color={colors.headCircumference}
-                    actionLabel={t("common.edit")}
-                    onViewEntries={() => {
-                      if (selectedBar.entry) onEditEntry?.("headCircumference", selectedBar.entry);
-                      setSelectedBar(null);
-                    }}
-                    onDismiss={() => setSelectedBar(null)}
-                  />
-                )}
-              </>
-            ) : (
-              <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 40 }}>
-                {headCircumferenceSeries.length === 1 ? t("growth.needTwoMeasurements") : t("growth.noHeadCircumferenceData")}
-              </div>
-            )}
-          </SectionCard>
+          <GrowthTrendChart
+            title={t("growth.headCircumferenceTrend")}
+            icon={<Icons.HeadCircle />}
+            color={colors.headCircumference}
+            metric="headCircumference"
+            entries={headCircumferences}
+            valueKey="head_circumference"
+            unit={units.length}
+            birthDate={birthDate}
+            childSex={childSex}
+            onEditEntry={onEditEntry}
+          />
         </div>
 
         {/* BMI Chart */}
         <div className="fade-in fade-in-8">
-          <SectionCard title={t("growth.bmiTrend")} icon={<Icons.Gauge />} color={colors.bmi}>
-            {bmiSeries.length >= 2 ? (
-              <>
-                <div style={{ height: 200 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={bmiSeries} onClick={(data) => handleChartClick(data, "bmi")}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#252836" vertical={false} />
-                      <XAxis dataKey="timestamp" type="number" scale="time" domain={["dataMin", "dataMax"]} tickFormatter={formatGrowthTick} tick={{ fontSize: 11, fill: "#5A6178" }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 11, fill: "#5A6178" }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
-                      <Tooltip content={<CustomTooltip labelFormatter={formatGrowthTick} />} />
-                      <Line
-                        type="monotone"
-                        dataKey="bmi"
-                        stroke={colors.bmi}
-                        strokeWidth={2.5}
-                        dot={{ fill: colors.bmi, r: 4, cursor: "pointer" }}
-                        activeDot={{ r: 6, cursor: "pointer" }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-                {selectedBar?.type === "bmi" && (
-                  <ChartDetailBar
-                    label={formatGrowthTick(selectedBar.label)}
-                    value={selectedBar.value}
-                    unit=""
-                    color={colors.bmi}
-                    actionLabel={t("common.edit")}
-                    onViewEntries={() => {
-                      if (selectedBar.entry) onEditEntry?.("bmi", selectedBar.entry);
-                      setSelectedBar(null);
-                    }}
-                    onDismiss={() => setSelectedBar(null)}
-                  />
-                )}
-              </>
-            ) : (
-              <div style={{ color: "var(--text-dim)", fontSize: 13, textAlign: "center", padding: 40 }}>
-                {bmiSeries.length === 1 ? t("growth.needTwoMeasurements") : t("growth.noBmiData")}
-              </div>
-            )}
-          </SectionCard>
+          <GrowthTrendChart
+            title={t("growth.bmiTrend")}
+            icon={<Icons.Gauge />}
+            color={colors.bmi}
+            metric="bmi"
+            entries={bmis}
+            valueKey="bmi"
+            unit=""
+            birthDate={birthDate}
+            childSex={childSex}
+            onEditEntry={onEditEntry}
+          />
         </div>
       </div>
 

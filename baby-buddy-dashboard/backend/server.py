@@ -14,6 +14,12 @@ from backend.medication_alerts import run_medication_alert_loop
 
 logger = logging.getLogger(__name__)
 
+
+def sanitize_child_sex(value):
+    """CHILD_SEX must only ever be 'male', 'female', or '' (unset) - never an arbitrary/garbled value."""
+    return value if value in ("male", "female") else ""
+
+
 # --- Configuration ---
 
 BABY_BUDDY_URL = os.environ.get("BABY_BUDDY_URL", "").rstrip("/")
@@ -22,6 +28,7 @@ REFRESH_INTERVAL = int(os.environ.get("REFRESH_INTERVAL", "30"))
 DEMO_MODE = os.environ.get("DEMO_MODE", "").lower() in ("true", "1", "yes")
 UNIT_SYSTEM = os.environ.get("UNIT_SYSTEM", "metric").lower()
 ENABLE_MEDICATION_ALERTS = os.environ.get("ENABLE_MEDICATION_ALERTS", "").lower() in ("true", "1", "yes")
+CHILD_SEX = sanitize_child_sex(os.environ.get("CHILD_SEX", ""))
 
 # Fallback: read from HA add-on options.json
 if not BABY_BUDDY_URL:
@@ -34,6 +41,7 @@ if not BABY_BUDDY_URL:
         DEMO_MODE = DEMO_MODE or opts.get("demo_mode", False)
         UNIT_SYSTEM = opts.get("unit_system", UNIT_SYSTEM)
         ENABLE_MEDICATION_ALERTS = ENABLE_MEDICATION_ALERTS or opts.get("enable_medication_alerts", False)
+        CHILD_SEX = CHILD_SEX or sanitize_child_sex(opts.get("child_sex", ""))
 
 SUPERVISOR_TOKEN = os.environ.get("SUPERVISOR_TOKEN", "")
 
@@ -87,7 +95,12 @@ app = FastAPI(lifespan=lifespan)
 
 @app.get("/api/config")
 async def get_config():
-    return {"refresh_interval": REFRESH_INTERVAL, "demo_mode": DEMO_MODE, "unit_system": UNIT_SYSTEM}
+    return {
+        "refresh_interval": REFRESH_INTERVAL,
+        "demo_mode": DEMO_MODE,
+        "unit_system": UNIT_SYSTEM,
+        "child_sex": CHILD_SEX,
+    }
 
 
 @app.api_route(

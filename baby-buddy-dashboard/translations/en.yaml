@@ -17,3 +17,6 @@ configuration:
   enable_medication_alerts:
     name: Medication Alerts
     description: "Expose a binary_sensor.baby_buddy_medication_overdue entity in Home Assistant that turns on when any medication dose is overdue, so you can build your own automations/notifications on top of it"
+  child_sex:
+    name: Child's Sex
+    description: "Optional - lets the Growth tab overlay WHO growth-standard percentile curves (weight, height, head circumference, BMI) on top of your child's own measurements. Baby Buddy itself doesn't store this, so it's set here instead. Leave unset to hide the percentile overlay."

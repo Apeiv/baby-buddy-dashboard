@@ -44,6 +44,7 @@ export function useBabyData() {
   const [error, setError] = useState(null);
   const [lastSync, setLastSync] = useState(null);
   const [unitSystem, setUnitSystem] = useState("metric");
+  const [childSex, setChildSex] = useState("");
   const intervalRef = useRef(null);
   const childIdRef = useRef(null);
 
@@ -229,6 +230,7 @@ export function useBabyData() {
       .getConfig()
       .then((cfg) => {
         if (cfg.unit_system) setUnitSystem(cfg.unit_system);
+        if (cfg.child_sex) setChildSex(cfg.child_sex);
         if (cfg.demo_mode) {
           demoRef.current = true;
           loadMock();
@@ -272,6 +274,7 @@ export function useBabyData() {
     error,
     lastSync,
     unitSystem,
+    childSex,
     demoMode: demoRef.current,
     refetch: fetchAll,
   };

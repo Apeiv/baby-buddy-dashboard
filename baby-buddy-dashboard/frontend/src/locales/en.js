@@ -143,6 +143,11 @@ export default {
     noHeadCircumferenceData: "No head circumference data recorded yet",
     noBmiData: "No BMI data recorded yet",
     needTwoMeasurements: "Need at least 2 measurements to show trend",
+    whoPercentiles: "WHO percentiles",
+    weekOfAge: "Week {week}",
+    weekShort: "{week}w",
+    yourChild: "Your child",
+    whoSource: "WHO Child Growth Standards · P3–P97",
   },
 
   notes: {

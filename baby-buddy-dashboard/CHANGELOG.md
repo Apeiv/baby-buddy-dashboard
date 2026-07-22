@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.6.0
+
+- Added WHO growth-standard percentile overlays to the Weight, Height,
+  Head Circumference, and BMI trend charts. Toggle "WHO percentiles"
+  on any of them to switch that chart from a calendar-date axis to
+  age-in-weeks, with P3-P97 and P15-P85 shaded bands and a P50 median
+  reference line from the official WHO Child Growth Standards behind
+  your child's own measurements. Requires the new "Child's Sex"
+  add-on option (Baby Buddy itself doesn't store this) - leave it
+  unset and the toggle simply doesn't appear.
+- Fixed a bug where the "Medication Alerts" add-on option (added in
+  1.4.0) never actually reached the running add-on - `run.sh` was
+  missing the line that exports it as an environment variable, so it
+  silently no-opped even when enabled in the add-on's configuration.
+
 ## 1.5.0
 
 - Added full translation support: English, Italian, and German. A

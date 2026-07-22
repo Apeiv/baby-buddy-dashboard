@@ -143,6 +143,11 @@ export default {
     noHeadCircumferenceData: "Nessun dato sulla circonferenza cranica ancora registrato",
     noBmiData: "Nessun dato sul BMI ancora registrato",
     needTwoMeasurements: "Servono almeno 2 misurazioni per mostrare l'andamento",
+    whoPercentiles: "Percentili OMS",
+    weekOfAge: "Settimana {week}",
+    weekShort: "{week}sett",
+    yourChild: "Tuo/a figlio/a",
+    whoSource: "Standard di crescita OMS · P3–P97",
   },
 
   notes: {

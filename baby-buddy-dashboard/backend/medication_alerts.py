@@ -58,7 +58,7 @@ def is_any_medication_overdue(medications, now=None):
     return False
 
 
-async def _check_once(baby_buddy_client: httpx.AsyncClient) -> bool:
+async def _check_once(baby_buddy_client: httpx.AsyncClient, now=None) -> bool:
     """baby_buddy_client is the app's shared proxy client - its base_url is the bare
     Baby Buddy host, so paths here need the same "/api/" prefix the HTTP proxy route adds."""
     children_res = await baby_buddy_client.get("/api/children/")
@@ -72,7 +72,7 @@ async def _check_once(baby_buddy_client: httpx.AsyncClient) -> bool:
         )
         meds_res.raise_for_status()
         medications = meds_res.json().get("results", [])
-        if is_any_medication_overdue(medications):
+        if is_any_medication_overdue(medications, now=now):
             return True
     return False
 
