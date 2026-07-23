@@ -4,7 +4,7 @@ import { useTimers } from "./hooks/useTimers";
 import { UnitContext } from "./utils/units";
 import { Icons } from "./components/Icons";
 import { colors } from "./utils/colors";
-import { getAge, formatElapsed, getMedicationStatus } from "./utils/formatters";
+import { getAge, formatElapsed, getMedicationStatus, toApiDatetime } from "./utils/formatters";
 import { subscribeErrorLog, getErrorLog } from "./utils/errorLog";
 import { clickableProps } from "./utils/a11y";
 import { applyTheme } from "./utils/theme";
@@ -232,7 +232,7 @@ export default function App() {
                 autoFocus
                 onBlur={(e) => {
                   if (e.target.value) {
-                    timer.editTimer(activeTimer.id, `${e.target.value}:00`);
+                    timer.editTimer(activeTimer.id, toApiDatetime(e.target.value));
                   }
                   setEditingTimerId(null);
                 }}
@@ -472,6 +472,8 @@ export default function App() {
         <WeightForm
           childId={data.child?.id}
           entry={modal.entry}
+          heights={data.heights}
+          bmis={data.bmis}
           onDone={handleFormDone}
           onClose={closeModal}
         />
@@ -480,6 +482,8 @@ export default function App() {
         <HeightForm
           childId={data.child?.id}
           entry={modal.entry}
+          weights={data.weights}
+          bmis={data.bmis}
           onDone={handleFormDone}
           onClose={closeModal}
         />

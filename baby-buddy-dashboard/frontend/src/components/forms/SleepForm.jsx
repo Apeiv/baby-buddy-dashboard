@@ -6,6 +6,7 @@ import DeleteButton from "../DeleteButton";
 import { colors } from "../../utils/colors";
 import { logError } from "../../utils/errorLog";
 import { useTranslation } from "../../locales";
+import { toApiDatetime } from "../../utils/formatters";
 
 function toLocalDatetime(date) {
   const pad = (n) => String(n).padStart(2, "0");
@@ -30,8 +31,8 @@ export default function SleepForm({ childId, timerId, entry, onDone, onClose }) 
     try {
       if (isEdit) {
         const data = {
-          start: `${start}:00`,
-          end: `${end}:00`,
+          start: toApiDatetime(start),
+          end: toApiDatetime(end),
         };
         if (notes.trim()) data.notes = notes.trim();
         await api.updateSleep(entry.id, data);
@@ -41,8 +42,8 @@ export default function SleepForm({ childId, timerId, entry, onDone, onClose }) 
         if (timerId) {
           data.timer = timerId;
         } else {
-          data.start = `${start}:00`;
-          data.end = `${end}:00`;
+          data.start = toApiDatetime(start);
+          data.end = toApiDatetime(end);
         }
         await api.createSleep(data);
       }

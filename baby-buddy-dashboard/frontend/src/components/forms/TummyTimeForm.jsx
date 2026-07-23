@@ -5,6 +5,7 @@ import DeleteButton from "../DeleteButton";
 import { colors } from "../../utils/colors";
 import { logError } from "../../utils/errorLog";
 import { useTranslation } from "../../locales";
+import { toApiDatetime } from "../../utils/formatters";
 
 function toLocalDatetime(date) {
   const pad = (n) => String(n).padStart(2, "0");
@@ -28,7 +29,7 @@ export default function TummyTimeForm({ childId, timerId, entry, onDone, onClose
     setError(null);
     try {
       if (isEdit) {
-        const data = { start: `${start}:00`, end: `${end}:00` };
+        const data = { start: toApiDatetime(start), end: toApiDatetime(end) };
         if (milestone.trim()) data.milestone = milestone.trim();
         await api.updateTummyTime(entry.id, data);
       } else {
@@ -36,8 +37,8 @@ export default function TummyTimeForm({ childId, timerId, entry, onDone, onClose
         if (timerId) {
           data.timer = timerId;
         } else {
-          data.start = `${start}:00`;
-          data.end = `${end}:00`;
+          data.start = toApiDatetime(start);
+          data.end = toApiDatetime(end);
         }
         if (milestone.trim()) data.milestone = milestone.trim();
         await api.createTummyTime(data);

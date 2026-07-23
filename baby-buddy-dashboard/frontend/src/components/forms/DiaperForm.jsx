@@ -5,6 +5,7 @@ import DeleteButton from "../DeleteButton";
 import { colors } from "../../utils/colors";
 import { logError } from "../../utils/errorLog";
 import { useTranslation } from "../../locales";
+import { toApiDatetime } from "../../utils/formatters";
 
 function toLocalDatetime(date) {
   const pad = (n) => String(n).padStart(2, "0");
@@ -36,7 +37,7 @@ export default function DiaperForm({ childId, entry, onDone, onClose, preset }) 
     setSaving(true);
     setError(null);
     try {
-      const data = { wet, solid, time: `${time}:00` };
+      const data = { wet, solid, time: toApiDatetime(time) };
       if (color) data.color = color;
       if (notes.trim()) data.notes = notes.trim();
       if (isEdit) {

@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.7.6
+
+- Fixed a real-world bug where saving or editing a Feeding (or Sleep,
+  Diaper, Tummy Time, Temperature, Medication, Note, or a running
+  timer) could fail with "Date/time can not be in the future" or a
+  bogus overlap conflict, even for an entry logged seconds ago. Every
+  form sent its date/time to Baby Buddy as a plain local string with
+  no timezone info; Baby Buddy's API (at least for token-authenticated
+  requests, which this add-on always uses) parses that as UTC
+  regardless of the household's actual timezone or Baby Buddy's own
+  per-user timezone setting - a couple of hours off was enough to look
+  like "the future". Every form now sends an explicit, unambiguous UTC
+  timestamp instead.
+- Added automatic BMI calculation: saving a Weight or Height entry now
+  checks for a matching entry (the other measurement, same date) and
+  creates or updates the corresponding BMI entry on Baby Buddy to
+  match - no more logging BMI a third time by hand when it's fully
+  determined by two measurements you already took. Respects the
+  add-on's configured unit system for the conversion (Baby Buddy
+  itself has no unit concept - weight/height are just numbers).
+
 ## 1.7.5
 
 - Fixed a custom theme (1.7.0) briefly flashing the default dark

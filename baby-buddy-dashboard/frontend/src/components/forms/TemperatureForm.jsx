@@ -6,6 +6,7 @@ import { colors } from "../../utils/colors";
 import { useUnits } from "../../utils/units";
 import { logError } from "../../utils/errorLog";
 import { useTranslation } from "../../locales";
+import { toApiDatetime } from "../../utils/formatters";
 
 function toLocalDatetime(date) {
   const pad = (n) => String(n).padStart(2, "0");
@@ -27,7 +28,7 @@ export default function TemperatureForm({ childId, entry, onDone, onClose }) {
     setSaving(true);
     setError(null);
     try {
-      const data = { temperature: parseFloat(temp), time: `${time}:00` };
+      const data = { temperature: parseFloat(temp), time: toApiDatetime(time) };
       if (isEdit) {
         await api.updateTemperature(entry.id, data);
       } else {

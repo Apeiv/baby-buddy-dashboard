@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { api } from "../../api";
 import Modal, { FormField, FormInput, FormButton, FormError } from "../Modal";
 import DeleteButton from "../DeleteButton";
 import { colors } from "../../utils/colors";
-import { useUnits } from "../../utils/units";
+import { useUnits, UnitContext } from "../../utils/units";
 import { logError } from "../../utils/errorLog";
 import { useTranslation } from "../../locales";
+import { syncBmiForDate } from "../../utils/bmiSync";
 
 function toLocalDate(date) {
   const d = new Date(date);
@@ -13,9 +14,10 @@ function toLocalDate(date) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-export default function WeightForm({ childId, entry, onDone, onClose }) {
+export default function WeightForm({ childId, entry, onDone, onClose, heights = [], bmis = [] }) {
   const t = useTranslation();
   const units = useUnits();
+  const unitSystem = useContext(UnitContext);
   const isEdit = !!entry;
   const [weight, setWeight] = useState(entry?.weight ? String(entry.weight) : "");
   const [date, setDate] = useState(entry?.date ? toLocalDate(entry.date) : toLocalDate(new Date()));
@@ -38,6 +40,23 @@ export default function WeightForm({ childId, entry, onDone, onClose }) {
         data.child = childId;
         await api.createWeight(data);
       }
+
+      const matchingHeight = heights.find((h) => h.date === date);
+      if (matchingHeight) {
+        try {
+          await syncBmiForDate({
+            childId,
+            date,
+            weightValue: data.weight,
+            heightValue: parseFloat(matchingHeight.height),
+            bmis,
+            unitSystem,
+          });
+        } catch (bmiErr) {
+          logError("Auto-calculate BMI", bmiErr.message);
+        }
+      }
+
       onDone();
     } catch (err) {
       setSaving(false);

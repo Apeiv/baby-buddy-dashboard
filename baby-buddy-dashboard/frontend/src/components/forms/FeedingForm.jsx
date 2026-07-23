@@ -6,6 +6,7 @@ import { colors } from "../../utils/colors";
 import { useUnits } from "../../utils/units";
 import { logError } from "../../utils/errorLog";
 import { useTranslation } from "../../locales";
+import { toApiDatetime } from "../../utils/formatters";
 
 function toLocalDatetime(date) {
   const pad = (n) => String(n).padStart(2, "0");
@@ -53,16 +54,16 @@ export default function FeedingForm({ childId, timerId, entry, onDone, onClose }
       if (amount) data.amount = parseFloat(amount);
       if (notes.trim()) data.notes = notes.trim();
       if (isEdit) {
-        data.start = `${start}:00`;
-        data.end = `${end}:00`;
+        data.start = toApiDatetime(start);
+        data.end = toApiDatetime(end);
         await api.updateFeeding(entry.id, data);
       } else {
         data.child = childId;
         if (timerId) {
           data.timer = timerId;
         } else {
-          data.start = `${start}:00`;
-          data.end = `${end}:00`;
+          data.start = toApiDatetime(start);
+          data.end = toApiDatetime(end);
         }
         await api.createFeeding(data);
       }

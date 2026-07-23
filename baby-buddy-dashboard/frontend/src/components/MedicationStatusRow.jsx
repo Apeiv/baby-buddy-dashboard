@@ -25,7 +25,7 @@ export default function MedicationStatusRow({ status, childId, onUpdated }) {
       const data = {
         child: childId,
         name: status.entry.name,
-        time: `${toLocalDatetime(new Date())}:00`,
+        time: new Date().toISOString(),
       };
       if (status.entry.dosage != null) data.dosage = status.entry.dosage;
       if (status.entry.dosage_unit) data.dosage_unit = status.entry.dosage_unit;

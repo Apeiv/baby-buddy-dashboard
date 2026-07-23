@@ -5,6 +5,7 @@ import DeleteButton from "../DeleteButton";
 import { colors } from "../../utils/colors";
 import { logError } from "../../utils/errorLog";
 import { useTranslation } from "../../locales";
+import { toApiDatetime } from "../../utils/formatters";
 
 function toLocalDatetime(date) {
   const pad = (n) => String(n).padStart(2, "0");
@@ -25,7 +26,7 @@ export default function NoteForm({ childId, entry, onDone, onClose }) {
     setSaving(true);
     setError(null);
     try {
-      const data = { note: note.trim(), time: `${time}:00` };
+      const data = { note: note.trim(), time: toApiDatetime(time) };
       if (isEdit) {
         await api.updateNote(entry.id, data);
       } else {

@@ -16,6 +16,8 @@ import {
   averageFeedingGapMs,
   averageBreastFeedingDurationMs,
   translateDosageUnit,
+  toApiDatetime,
+  calculateBmi,
 } from "./formatters";
 import { setLanguage } from "../locales";
 
@@ -28,6 +30,56 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
+});
+
+describe("toApiDatetime", () => {
+  // Regression coverage for a real production bug: forms used to send a naive
+  // datetime-local string (e.g. "2026-07-23T07:22:00", no timezone info) straight to the
+  // Baby Buddy API. Baby Buddy's Django backend parses a timezone-less string according to
+  // ITS OWN configured TIME_ZONE, not the browser's - when they differ, a submission of
+  // "now" can appear to be hours in the future (or bogusly overlap an existing entry),
+  // exactly what a live user hit ("Date/time can not be in the future" on a feeding logged
+  // at 7:22am local time). toApiDatetime must produce an absolute, unambiguous instant.
+  it("round-trips a datetime-local value back to the exact same local wall-clock time", () => {
+    const local = "2026-07-23T07:22";
+    const iso = toApiDatetime(local);
+    expect(iso).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    const roundTripped = new Date(iso);
+    expect(roundTripped.getFullYear()).toBe(2026);
+    expect(roundTripped.getMonth()).toBe(6); // July (0-indexed)
+    expect(roundTripped.getDate()).toBe(23);
+    expect(roundTripped.getHours()).toBe(7);
+    expect(roundTripped.getMinutes()).toBe(22);
+  });
+
+  it("round-trips correctly across a local midnight boundary", () => {
+    const local = "2026-01-01T00:15";
+    const roundTripped = new Date(toApiDatetime(local));
+    expect(roundTripped.getFullYear()).toBe(2026);
+    expect(roundTripped.getMonth()).toBe(0);
+    expect(roundTripped.getDate()).toBe(1);
+    expect(roundTripped.getHours()).toBe(0);
+    expect(roundTripped.getMinutes()).toBe(15);
+  });
+});
+
+describe("calculateBmi", () => {
+  it("computes standard BMI (kg/m^2) for metric values", () => {
+    expect(calculateBmi(5.2, 60, "metric")).toBe(14.4);
+  });
+
+  it("converts imperial values (lb/in) to metric before computing BMI", () => {
+    // Same real-world measurements as the metric case above (5.2kg ~ 11.5lb,
+    // 60cm ~ 23.6in) - should land on essentially the same BMI.
+    expect(calculateBmi(11.5, 23.6, "imperial")).toBe(14.5);
+  });
+
+  it("returns null for missing or non-positive inputs, never dividing by zero", () => {
+    expect(calculateBmi(0, 60, "metric")).toBeNull();
+    expect(calculateBmi(5.2, 0, "metric")).toBeNull();
+    expect(calculateBmi(null, 60, "metric")).toBeNull();
+    expect(calculateBmi(5.2, -10, "metric")).toBeNull();
+  });
 });
 
 describe("getAge", () => {

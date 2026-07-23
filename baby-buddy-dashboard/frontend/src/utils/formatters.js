@@ -1,5 +1,19 @@
 import { translate as t, getLocale } from "../locales";
 
+// A <input type="datetime-local"> value ("2026-07-23T07:22") has no timezone info. Sending
+// it to the Baby Buddy API as-is (just appending ":00") is naive-string, timezone-blind -
+// Baby Buddy's Django backend parses it according to ITS OWN configured TIME_ZONE setting,
+// not the browser's. If that differs from the device's local zone (e.g. server on UTC,
+// household on UTC+2), the same wall-clock time is silently misinterpreted as a couple
+// hours off - which surfaced as real "Date/time can not be in the future" API rejections
+// and bogus overlap conflicts. new Date(value) correctly parses a timezone-less
+// date-time string as LOCAL time (per the ECMAScript Date Time String spec), so
+// .toISOString() from there gives an unambiguous absolute UTC instant that Baby Buddy
+// interprets identically regardless of its own configured timezone.
+export function toApiDatetime(localDatetimeValue) {
+  return new Date(localDatetimeValue).toISOString();
+}
+
 export function getAge(birthDate) {
   const birth = new Date(birthDate);
   const now = new Date();
@@ -337,6 +351,21 @@ export function averageBreastFeedingDurationMs(feedings) {
   const durations = (feedings || []).map(feedingDurationMs).filter((ms) => ms != null);
   if (!durations.length) return null;
   return durations.reduce((sum, ms) => sum + ms, 0) / durations.length;
+}
+
+const LB_TO_KG = 0.45359237;
+const IN_TO_CM = 2.54;
+
+// Baby Buddy imposes no unit at all on its weight/height/BMI fields - they're plain
+// unlabeled numbers, whatever the household happens to type in. Our own `unit_system`
+// add-on option is the only signal we have for what unit those raw numbers are actually
+// in, so it's what this conversion trusts (metric: already kg/cm; imperial: lb/in).
+export function calculateBmi(weightValue, heightValue, unitSystem) {
+  if (!weightValue || !heightValue || heightValue <= 0) return null;
+  const weightKg = unitSystem === "imperial" ? weightValue * LB_TO_KG : weightValue;
+  const heightCm = unitSystem === "imperial" ? heightValue * IN_TO_CM : heightValue;
+  const heightM = heightCm / 100;
+  return Math.round((weightKg / (heightM * heightM)) * 10) / 10;
 }
 
 export function dailyFeedingTotals(entries, numDays = 30) {

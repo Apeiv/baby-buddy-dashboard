@@ -5,6 +5,7 @@ import DeleteButton from "../DeleteButton";
 import { colors } from "../../utils/colors";
 import { logError } from "../../utils/errorLog";
 import { useTranslation } from "../../locales";
+import { toApiDatetime } from "../../utils/formatters";
 
 function toLocalDatetime(date) {
   const pad = (n) => String(n).padStart(2, "0");
@@ -47,7 +48,7 @@ export default function MedicationForm({ childId, entry, onDone, onClose }) {
     setSaving(true);
     setError(null);
     try {
-      const data = { name: name.trim(), time: `${time}:00` };
+      const data = { name: name.trim(), time: toApiDatetime(time) };
       if (dosage) data.dosage = parseFloat(dosage);
       if (dosageUnit) data.dosage_unit = dosageUnit;
       if (nextDoseHours) data.next_dose_interval = `${nextDoseHours}:00:00`;
