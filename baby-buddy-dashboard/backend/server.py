@@ -256,12 +256,19 @@ async def proxy_baby_buddy(path: str, request: Request):
     except httpx.TimeoutException:
         raise HTTPException(504, "Baby Buddy request timed out")
 
-    excluded_headers = {"transfer-encoding", "content-encoding", "content-length", "connection", "server"}
+    # "date" is deliberately excluded here (not just renamed) - uvicorn's own HTTP layer
+    # always emits its own Date header on the way out regardless of what's in this dict, so
+    # forwarding Baby Buddy's under the same name produces two "date" headers in the raw
+    # response, which browsers merge into one comma-joined, unparseable string. Baby Buddy's
+    # actual clock is surfaced separately below, under a name uvicorn won't also emit.
+    excluded_headers = {"transfer-encoding", "content-encoding", "content-length", "connection", "server", "date"}
     response_headers = {
         k: v
         for k, v in response.headers.items()
         if k.lower() not in excluded_headers
     }
+    if "date" in response.headers:
+        response_headers["X-Baby-Buddy-Date"] = response.headers["date"]
 
     return Response(
         content=response.content,

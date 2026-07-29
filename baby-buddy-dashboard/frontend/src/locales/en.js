@@ -166,6 +166,7 @@ export default {
     dueNextToday: "Next: Today at {time}",
     dueNextTomorrow: "Next: Tomorrow at {time}",
     dueNextOn: "Next: {date} at {time}",
+    lateDoseNote: "Logged late (originally due {dueDate} {dueTime})",
   },
 
   temperature: {

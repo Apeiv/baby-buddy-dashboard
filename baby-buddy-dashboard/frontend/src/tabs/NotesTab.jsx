@@ -31,7 +31,7 @@ export default function NotesTab({ childId, demoMode, notes, medications, onEdit
           {medicationStatus.length > 0 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: medicationTimeline.length > 0 ? 14 : 0 }}>
               {medicationStatus.map((s) => (
-                <MedicationStatusRow key={s.name} status={s} childId={childId} onUpdated={onDataChanged} />
+                <MedicationStatusRow key={`${s.name}-${s.slotIndex}`} status={s} childId={childId} onUpdated={onDataChanged} />
               ))}
             </div>
           )}

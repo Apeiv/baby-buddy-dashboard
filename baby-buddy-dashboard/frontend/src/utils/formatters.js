@@ -220,6 +220,13 @@ export function formatDueLabel(dueAt) {
   return t("notes.dueNextOn", { date: dueAt.toLocaleDateString(getLocale(), { month: "short", day: "numeric" }), time });
 }
 
+// Defensive cap on how many individual missed-dose rows a single medication can render -
+// without it, a recurring medication nobody has logged in weeks would produce one row per
+// elapsed interval. The current (not-yet-elapsed) slot's due date is always computed from
+// the true elapsed count regardless of this cap, so it's never wrong - only how many of the
+// oldest missed rows get individually listed is capped.
+const MAX_MISSED_DOSE_SLOTS = 10;
+
 export function getMedicationStatus(medications) {
   const latestByName = {};
   medications.forEach((m) => {
@@ -229,11 +236,31 @@ export function getMedicationStatus(medications) {
       latestByName[m.name] = m;
     }
   });
-  return Object.values(latestByName).map((m) => {
+
+  const now = Date.now();
+  const statuses = [];
+  Object.values(latestByName).forEach((m) => {
     const hours = parseDurationHours(m.next_dose_interval);
-    const dueAt = new Date(new Date(m.time).getTime() + hours * 3600000);
-    return { name: m.name, dueAt, overdue: Date.now() > dueAt.getTime(), entry: m };
+    const intervalMs = hours * 3600000;
+    if (!(intervalMs > 0)) return;
+    const lastTime = new Date(m.time).getTime();
+
+    // Every fully-elapsed interval since the last logged dose that hasn't been acted on is
+    // a missed dose - its own overdue row, distinct from the still-open "current" one (which
+    // stays upcoming/green until it too elapses and rolls into the next render's backlog).
+    const elapsedSlots = Math.max(Math.floor((now - lastTime) / intervalMs), 0);
+    const missedToShow = Math.min(elapsedSlots, MAX_MISSED_DOSE_SLOTS);
+    const firstMissedSlot = elapsedSlots - missedToShow + 1;
+    for (let slot = firstMissedSlot; slot <= elapsedSlots; slot++) {
+      const dueAt = new Date(lastTime + slot * intervalMs);
+      statuses.push({ name: m.name, dueAt, overdue: now > dueAt.getTime(), current: false, slotIndex: slot, entry: m });
+    }
+
+    const currentSlot = elapsedSlots + 1;
+    const dueAt = new Date(lastTime + currentSlot * intervalMs);
+    statuses.push({ name: m.name, dueAt, overdue: now > dueAt.getTime(), current: true, slotIndex: currentSlot, entry: m });
   });
+  return statuses;
 }
 
 export function toGrowthSeries(entries, valueKey) {

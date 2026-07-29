@@ -272,3 +272,25 @@ async def test_proxy_media_returns_404_when_baby_buddy_404s(monkeypatch):
     async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
         res = await client.get("/api/media/uploads/photo.jpg")
     assert res.status_code == 404
+
+
+async def test_proxy_forwards_baby_buddy_date_under_a_different_header_name(monkeypatch):
+    # Regression test for a real diagnostic bug: uvicorn's own HTTP layer always emits its
+    # own `Date` header regardless of what's in the ASGI response's headers - forwarding Baby
+    # Buddy's own Date under the same name produced two "date" headers in the raw HTTP
+    # response, which browsers merge into one comma-joined, unparseable string. Verifies the
+    # proxy excludes "date" from the raw passthrough and forwards Baby Buddy's value under
+    # X-Baby-Buddy-Date instead, which no other layer will also emit.
+    def dated_handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"results": []}, headers={"Date": "Mon, 01 Jan 2024 00:00:00 GMT"})
+
+    mock_client = httpx.AsyncClient(transport=httpx.MockTransport(dated_handler), base_url="http://fake-baby-buddy/api")
+    monkeypatch.setattr(server_mod, "http_client", mock_client)
+
+    transport = httpx.ASGITransport(app=server_mod.app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+        res = await client.get("/api/baby-buddy/children/")
+    assert res.headers.get("x-baby-buddy-date") == "Mon, 01 Jan 2024 00:00:00 GMT"
+    # httpx.Headers normalizes access to be case-insensitive and single-valued per name -
+    # this confirms the raw Baby Buddy value isn't ALSO forwarded verbatim as "date".
+    assert res.headers.get("date") != "Mon, 01 Jan 2024 00:00:00 GMT"

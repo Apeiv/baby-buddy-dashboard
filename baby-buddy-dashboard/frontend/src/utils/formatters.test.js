@@ -216,13 +216,40 @@ describe("getMedicationStatus", () => {
     expect(getMedicationStatus(meds)).toEqual([]);
   });
 
-  it("flags a dose as overdue once past its interval", () => {
+  it("returns a single upcoming row when the dose isn't due yet", () => {
+    const meds = [
+      { name: "Tylenol", time: new Date(NOW.getTime() - 1 * 3600_000).toISOString(), next_dose_interval: "06:00:00" },
+    ];
+    const statuses = getMedicationStatus(meds);
+    expect(statuses).toHaveLength(1);
+    expect(statuses[0].overdue).toBe(false);
+    expect(statuses[0].current).toBe(true);
+  });
+
+  it("adds one missed row per fully-elapsed interval, plus the still-open current row", () => {
+    // Last dose 8h ago, 6h interval -> one interval (slot 1) has fully elapsed and was
+    // never acted on (missed, overdue), slot 2 hasn't arrived yet (current, upcoming).
     const meds = [
       { name: "Tylenol", time: new Date(NOW.getTime() - 8 * 3600_000).toISOString(), next_dose_interval: "06:00:00" },
     ];
-    const [status] = getMedicationStatus(meds);
-    expect(status.overdue).toBe(true);
-    expect(status.name).toBe("Tylenol");
+    const statuses = getMedicationStatus(meds);
+    expect(statuses).toHaveLength(2);
+    expect(statuses[0]).toMatchObject({ name: "Tylenol", overdue: true, current: false, slotIndex: 1 });
+    expect(statuses[1]).toMatchObject({ name: "Tylenol", overdue: false, current: true, slotIndex: 2 });
+  });
+
+  it("caps the number of individual missed rows without corrupting the current slot's due date", () => {
+    // 30 days neglected, 1-day interval -> 30 missed slots would be excessive; capped at 10,
+    // but the current (31st) slot's due date must still reflect the true elapsed count.
+    const meds = [
+      { name: "Daily Vit", time: new Date(NOW.getTime() - 30 * 24 * 3600_000).toISOString(), next_dose_interval: "1 00:00:00" },
+    ];
+    const statuses = getMedicationStatus(meds);
+    const missed = statuses.filter((s) => !s.current);
+    const current = statuses.find((s) => s.current);
+    expect(missed).toHaveLength(10);
+    expect(current.slotIndex).toBe(31);
+    expect(current.overdue).toBe(false);
   });
 
   it("uses only the most recent dose per medication name", () => {

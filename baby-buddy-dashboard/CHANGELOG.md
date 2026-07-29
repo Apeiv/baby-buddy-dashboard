@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.7.7
+
+- Added a second overdue-medication row: if a dose's window has fully
+  passed without being logged before the next one comes due, it now
+  shows as its own "Overdue by..." row, separate from the still-open
+  current dose (which stays in its normal state until it, too,
+  elapses). Each row has its own "Mark as taken" button. Marking a
+  missed row as taken always logs it for the actual current time
+  (never backdated), with an automatic note recording that it was
+  logged late and when it was originally due - by design, this never
+  suggests giving two doses at once. Capped at 10 backlog rows per
+  medication so a long-neglected recurring medication can't produce
+  an unbounded list.
+- Added a device-vs-server clock comparison to the error log for
+  failed saves (e.g. "Date/time can not be in the future"), to tell
+  apart a genuine clock skew from a code bug going forward. Fixed a
+  bug found while building this: the backend was forwarding Baby
+  Buddy's `Date` response header under the same name uvicorn already
+  uses for its own, producing two "Date" headers that browsers merge
+  into one unparseable value - now forwarded as `X-Baby-Buddy-Date`
+  instead.
+
 ## 1.7.6
 
 - Fixed a real-world bug where saving or editing a Feeding (or Sleep,

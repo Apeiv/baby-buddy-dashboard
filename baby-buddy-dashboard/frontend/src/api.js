@@ -21,6 +21,23 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = REQUEST_TIMEOUT_M
   }
 }
 
+// Diagnostic aid for "Date/time can not be in the future"-style rejections: the backend
+// forwards Baby Buddy's own `Date` response header under X-Baby-Buddy-Date (not as `Date` -
+// uvicorn always emits its own `Date` regardless, so reusing that name would produce two
+// headers merged into one unparseable value). Comparing it against the device's own clock
+// at the same instant surfaces a genuine clock skew (device or Baby Buddy's server) directly
+// in the error log, instead of having to guess whether a "future" rejection on an
+// already-correct timestamp is a code bug or an environment problem.
+function clockSkewSuffix(response) {
+  const serverDateHeader = response.headers.get("X-Baby-Buddy-Date");
+  if (!serverDateHeader) return "";
+  const serverMs = Date.parse(serverDateHeader);
+  if (Number.isNaN(serverMs)) return "";
+  const clientMs = Date.now();
+  const skewMs = clientMs - serverMs;
+  return ` [clockCheck: device=${new Date(clientMs).toISOString()} server=${new Date(serverMs).toISOString()} deviceAheadByMs=${skewMs}]`;
+}
+
 async function request(endpoint, options = {}) {
   const url = `${API_BASE}/${endpoint}`;
   const config = {
@@ -32,7 +49,7 @@ async function request(endpoint, options = {}) {
 
   if (!response.ok) {
     const text = await response.text().catch(() => "");
-    throw new Error(`API error ${response.status}: ${text}`);
+    throw new Error(`API error ${response.status}: ${text}${clockSkewSuffix(response)}`);
   }
 
   if (response.status === 204) return null;

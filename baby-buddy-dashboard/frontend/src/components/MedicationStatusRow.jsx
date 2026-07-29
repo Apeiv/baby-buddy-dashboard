@@ -4,7 +4,7 @@ import { Icons } from "./Icons";
 import { colors } from "../utils/colors";
 import { formatDueLabel, formatDurationString } from "../utils/formatters";
 import { logError } from "../utils/errorLog";
-import { useTranslation } from "../locales";
+import { useTranslation, getLocale } from "../locales";
 
 function toLocalDatetime(date) {
   const pad = (n) => String(n).padStart(2, "0");
@@ -30,6 +30,16 @@ export default function MedicationStatusRow({ status, childId, onUpdated }) {
       if (status.entry.dosage != null) data.dosage = status.entry.dosage;
       if (status.entry.dosage_unit) data.dosage_unit = status.entry.dosage_unit;
       if (status.entry.next_dose_interval) data.next_dose_interval = status.entry.next_dose_interval;
+      // A row that isn't the current slot represents a backlog dose whose window already
+      // closed - always logged for "now" (never backdated, so the record reflects when it
+      // was actually given), but noted as late so it's clear on review why the timing looks
+      // off relative to the schedule.
+      if (!status.current) {
+        data.notes = t("notes.lateDoseNote", {
+          dueDate: status.dueAt.toLocaleDateString(getLocale(), { month: "short", day: "numeric" }),
+          dueTime: status.dueAt.toLocaleTimeString(getLocale(), { hour: "2-digit", minute: "2-digit" }),
+        });
+      }
       await api.createMedication(data);
       await onUpdated?.();
     } catch (err) {

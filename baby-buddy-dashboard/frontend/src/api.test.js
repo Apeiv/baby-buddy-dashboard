@@ -11,10 +11,11 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function jsonResponse(body, { status = 200 } = {}) {
+function jsonResponse(body, { status = 200, headers = {} } = {}) {
   return {
     ok: status >= 200 && status < 300,
     status,
+    headers: new Headers(headers),
     json: () => Promise.resolve(body),
     text: () => Promise.resolve(JSON.stringify(body)),
   };
@@ -59,6 +60,31 @@ describe("api request building", () => {
   it("throws with the status code on a non-ok response", async () => {
     fetch.mockResolvedValueOnce(jsonResponse({ detail: "not found" }, { status: 404 }));
     await expect(api.getWeight()).rejects.toThrow(/API error 404/);
+  });
+});
+
+describe("clock skew diagnostic on API errors", () => {
+  // Regression coverage for a real report: "Date/time can not be in the future" on a
+  // payload that was already computed correctly (see toApiDatetime). The backend forwards
+  // Baby Buddy's own Date response header as X-Baby-Buddy-Date (not as `Date` - uvicorn
+  // always emits its own `Date`, so reusing that name would produce two headers merged into
+  // one unparseable string by the browser). Comparing it against the device's clock at the
+  // same instant tells us whether a "future" rejection is a genuine clock skew.
+  it("appends a device-vs-server clock comparison when the backend forwarded Baby Buddy's Date header", async () => {
+    fetch.mockResolvedValueOnce(
+      jsonResponse(
+        { time: ["Date/time can not be in the future."] },
+        { status: 400, headers: { "X-Baby-Buddy-Date": "Mon, 01 Jan 2024 00:00:00 GMT" } }
+      )
+    );
+    await expect(api.getWeight()).rejects.toThrow(
+      /clockCheck: device=.+ server=2024-01-01T00:00:00\.000Z deviceAheadByMs=\d+/
+    );
+  });
+
+  it("does not append anything when the header is absent (e.g. a network-layer error with no upstream response)", async () => {
+    fetch.mockResolvedValueOnce(jsonResponse({ detail: "bad request" }, { status: 400 }));
+    await expect(api.getWeight()).rejects.not.toThrow(/clockCheck/);
   });
 });
 
