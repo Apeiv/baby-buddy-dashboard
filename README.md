@@ -57,6 +57,38 @@ The backend acts as an API proxy so the Baby Buddy API key stays server-side and
    - **Demo Mode** — enable to preview with mock data (no Baby Buddy required)
 6. Start the add-on — the dashboard appears in the Home Assistant sidebar
 
+### Embedding in a Lovelace dashboard
+
+To show the dashboard inside a `panel` view of your own Lovelace dashboard (e.g. with
+`addon-iframe-card`), size the iframe to the visible
+area. A plain `100vh` is taller than the screen on desktop, because the Home Assistant header sits
+above the view, so the floating **Timer** and **+** buttons end up below the fold, hidden behind any
+bottom navigation bar. Subtract the header, plus the height of your bottom bar if you have one
+(drop the `- 90px` if you don't):
+
+```yaml
+type: custom:addon-iframe-card
+url: /api/hassio_ingress/<your-ingress-token>/
+card_mod:
+  style: |
+    ha-card {
+      height: calc(100dvh - var(--header-height, 0px) - 90px);
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      overflow: hidden;
+    }
+    ha-card > div {
+      height: calc(100dvh - var(--header-height, 0px) - 90px) !important;
+      padding-top: 0 !important;
+    }
+    iframe {
+      display: block !important;
+      width: 100% !important;
+      height: 100% !important;
+    }
+```
+
 ## Docker Compose
 
 Run the dashboard using Docker Compose — no Home Assistant required. You can either connect to an existing Baby Buddy instance or run one side-by-side.
