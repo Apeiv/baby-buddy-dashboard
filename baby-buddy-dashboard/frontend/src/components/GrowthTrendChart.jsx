@@ -13,7 +13,7 @@ import {
 import SectionCard from "./SectionCard";
 import ChartDetailBar from "./ChartDetailBar";
 import { toGrowthSeries, formatGrowthTick } from "../utils/formatters";
-import { ageInWeeks, buildWhoBandSeries, toAgeWeekSeries, hasWhoStandard } from "../utils/growthStandards";
+import { ageInWeeks, buildWhoBandSeries, toAgeWeekSeries, hasWhoStandard, zoomStartWeek } from "../utils/growthStandards";
 import { useTranslation } from "../locales";
 
 function PercentileTooltip({ active, payload, label, color, unit }) {
@@ -49,6 +49,21 @@ function PercentileTooltip({ active, payload, label, color, unit }) {
   );
 }
 
+function pillStyle(on, color) {
+  return {
+    padding: "3px 10px",
+    borderRadius: 12,
+    border: on ? `1px solid ${color}60` : "1px solid var(--border)",
+    background: on ? `${color}18` : "var(--bg)",
+    color: on ? color : "var(--text-muted)",
+    fontSize: 11,
+    fontWeight: 600,
+    cursor: "pointer",
+    fontFamily: "inherit",
+    whiteSpace: "nowrap",
+  };
+}
+
 export default function GrowthTrendChart({
   title,
   icon,
@@ -63,6 +78,7 @@ export default function GrowthTrendChart({
 }) {
   const t = useTranslation();
   const [showPercentiles, setShowPercentiles] = useState(false);
+  const [zoomed, setZoomed] = useState(true);
   const [selected, setSelected] = useState(null);
 
   const calendarSeries = toGrowthSeries(entries, valueKey);
@@ -84,10 +100,18 @@ export default function GrowthTrendChart({
 
   let whoBands = [];
   let childWeekSeries = [];
+  let canZoom = false;
   if (active) {
     const nowWeek = ageInWeeks(birthDate, new Date());
+    const startWeek = zoomStartWeek(nowWeek);
+    canZoom = startWeek > 0;
     whoBands = buildWhoBandSeries(metric, childSex, nowWeek);
     childWeekSeries = toAgeWeekSeries(entries, valueKey, birthDate);
+    // Zoomed: keep only the recent window so the Y domain below fits it instead of birth..now.
+    if (zoomed && canZoom) {
+      whoBands = whoBands.filter((b) => b.week >= startWeek);
+      childWeekSeries = childWeekSeries.filter((p) => p.week >= startWeek);
+    }
   }
 
   // Recharts' "auto" Y domain ignores an explicit min when a Line/Scatter shares the axis
@@ -110,26 +134,28 @@ export default function GrowthTrendChart({
       color={color}
       actions={
         canShowPercentiles ? (
-          <button
-            onClick={() => {
-              setShowPercentiles((v) => !v);
-              setSelected(null);
-            }}
-            style={{
-              padding: "3px 10px",
-              borderRadius: 12,
-              border: active ? `1px solid ${color}60` : "1px solid var(--border)",
-              background: active ? `${color}18` : "var(--bg)",
-              color: active ? color : "var(--text-muted)",
-              fontSize: 11,
-              fontWeight: 600,
-              cursor: "pointer",
-              fontFamily: "inherit",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {t("growth.whoPercentiles")}
-          </button>
+          <div style={{ display: "flex", gap: 6 }}>
+            {active && canZoom && (
+              <button
+                onClick={() => {
+                  setZoomed((v) => !v);
+                  setSelected(null);
+                }}
+                style={pillStyle(zoomed, color)}
+              >
+                {t("growth.zoomRecent")}
+              </button>
+            )}
+            <button
+              onClick={() => {
+                setShowPercentiles((v) => !v);
+                setSelected(null);
+              }}
+              style={pillStyle(active, color)}
+            >
+              {t("growth.whoPercentiles")}
+            </button>
+          </div>
         ) : null
       }
     >

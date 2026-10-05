@@ -34,6 +34,14 @@ export function buildWhoBandSeries(metric, sex, maxWeek) {
   }));
 }
 
+/** Weeks shown when the percentile chart is zoomed on the child's recent growth. */
+export const ZOOM_WEEKS = 6;
+
+/** First week of the zoomed window, or 0 when the child is too young for zooming to help. */
+export function zoomStartWeek(nowWeek) {
+  return Math.max(0, Math.floor(nowWeek) - ZOOM_WEEKS);
+}
+
 /** Child's own measurements re-plotted on an age-in-weeks x-axis instead of calendar date. */
 export function toAgeWeekSeries(entries, valueKey, birthDate) {
   return entries

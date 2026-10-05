@@ -145,6 +145,7 @@ export default {
     noBmiData: "Noch keine BMI-Daten vorhanden",
     needTwoMeasurements: "Mindestens 2 Messungen erforderlich, um einen Verlauf anzuzeigen",
     whoPercentiles: "WHO-Perzentile",
+    zoomRecent: "Zoom: letzte 6 Wochen",
     weekOfAge: "Woche {week}",
     weekShort: "{week}W",
     yourChild: "Dein Kind",

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.8
+
+- Growth tab: the WHO percentile chart now opens zoomed on the last 6
+  weeks, so the P3-P97 bands and the child's points fill the plot
+  instead of being squeezed into the birth-to-today range. A new
+  "Zoom" button next to "WHO percentiles" switches back to the full
+  range. The button only appears once the child is older than 6 weeks.
+
 ## 1.7.7
 
 - Added a second overdue-medication row: if a dose's window has fully

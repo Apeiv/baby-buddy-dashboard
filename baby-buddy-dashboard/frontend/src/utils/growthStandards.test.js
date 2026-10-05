@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ageInWeeks, hasWhoStandard, buildWhoBandSeries, toAgeWeekSeries } from "./growthStandards";
+import { ageInWeeks, hasWhoStandard, buildWhoBandSeries, toAgeWeekSeries, zoomStartWeek, ZOOM_WEEKS } from "./growthStandards";
 
 describe("ageInWeeks", () => {
   it("returns 0 for a measurement on the birth date", () => {
@@ -89,5 +89,16 @@ describe("toAgeWeekSeries", () => {
     const entry = { date: "2026-01-01", weight: 3.3, id: 42 };
     const [point] = toAgeWeekSeries([entry], "weight", birthDate);
     expect(point.entry).toBe(entry);
+  });
+});
+
+describe("zoomStartWeek", () => {
+  it("is 0 while the child is no older than the zoom window", () => {
+    expect(zoomStartWeek(0)).toBe(0);
+    expect(zoomStartWeek(ZOOM_WEEKS)).toBe(0);
+  });
+
+  it("starts ZOOM_WEEKS before the child's current whole week", () => {
+    expect(zoomStartWeek(12.4)).toBe(12 - ZOOM_WEEKS);
   });
 });
